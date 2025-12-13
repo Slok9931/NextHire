@@ -2,8 +2,20 @@ import app from './app.js'
 // Why app.js not app.ts? Because of ES Module support in Node.js
 import dotenv from 'dotenv'
 import { sql } from './utils/db.js'
+import { createClient } from 'redis';
 
 dotenv.config()
+
+export const redisClient = createClient({
+  url: process.env.REDIS_URL
+});
+
+redisClient.connect().then(() => {
+  console.log('✅ Connected to Redis');
+}).catch((err) => {
+  console.log('❌ Redis connection error:', err)
+  process.exit(1); // Exit the process with an error code
+});
 
 async function initDB() { 
   try {
