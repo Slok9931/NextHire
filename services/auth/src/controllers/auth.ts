@@ -5,14 +5,79 @@ import ErrorHandler from "../utils/errorHandler.js"
 import { tryCatch } from "../utils/tryCatch.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { forgetPasswordTemplate } from "../utils/template.js"
+import { forgetPasswordTemplate, verifyEmailTemplate } from "../utils/template.js"
 import { publishToTopic } from "../producer.js"
 import { redisClient } from "../index.js"
+
+export const requestOTP = tryCatch(async (req, res, next) => {
+    const { email } = req.body;
+    if (!email) {
+        throw new ErrorHandler("Please provide email", 400);
+    }
+
+    const existingUser = await sql`SELECT user_id FROM users WHERE email = ${email}`;
+    if (existingUser.length > 0) {
+        throw new ErrorHandler("User with this email already exists", 409);
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Hash the otp before storing
+    const hashedOTP = await bcrypt.hash(otp, 10);
+
+    await redisClient.setEx(`otp:${email}`, 10 * 60, hashedOTP);
+
+    const message = {
+        to: email,
+        subject: "Email Verification - NextHire",
+        html: verifyEmailTemplate(otp)
+    };
+
+    publishToTopic('send-mail', message);
+
+    res.status(200).json({
+        success: true,
+        message: "OTP has been sent to your email"
+    });
+});
+
+export const verifyOTP = tryCatch(async (req, res, next) => {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+        throw new ErrorHandler("Please provide email and OTP", 400);
+    }
+
+    const storedOTP = await redisClient.get(`otp:${email}`);
+    if (!storedOTP) {
+        throw new ErrorHandler("OTP has expired or doesn't exist", 400);
+    }
+
+    // Compare the hashed OTPs
+    const isOTPValid = await bcrypt.compare(otp, storedOTP);
+
+    if (!isOTPValid) {
+        throw new ErrorHandler("Invalid OTP", 400);
+    }
+
+    await redisClient.setEx(`verified:${email}`, 15 * 60, "true");
+    
+    await redisClient.del(`otp:${email}`);
+
+    res.status(200).json({
+        success: true,
+        message: "Email verified successfully. You can now register."
+    });
+});
 
 export const registerUser = tryCatch(async (req, res, next) => {
     const { name, email, password, phone_number, role, bio } = req.body;
     if(!name || !email || !password || !phone_number || !role) {
         throw new ErrorHandler("Please fill all required fields", 400);
+    }
+
+    const isEmailVerified = await redisClient.get(`verified:${email}`);
+    if (!isEmailVerified) {
+        throw new ErrorHandler("Please verify your email first", 400);
     }
 
     const existingUser = await sql`SELECT user_id FROM users WHERE email = ${email}`;
@@ -57,6 +122,8 @@ export const registerUser = tryCatch(async (req, res, next) => {
     }
 
     const token = jwt.sign({ user_id: registeredUser?.user_id, role: registeredUser?.role }, process.env.JWT_SECRET as string, { expiresIn: '15d' });
+
+    await redisClient.del(`verified:${email}`);
 
     res.status(201).json({
         success: true,
