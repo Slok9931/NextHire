@@ -28,3 +28,39 @@ export const myProfile = tryCatch(async (req: AuthenticatedRequest, res, next) =
         data: user
     });
  });
+
+ export const updateUserProfile = tryCatch(async (req: AuthenticatedRequest, res, next) => {
+    const user = req.user;
+     
+    if(!user) {
+        throw new ErrorHandler("Unauthorized", 401);
+    }
+     
+    const { name, phone_number, bio, skills } = req.body;
+
+    const updatedUser = await sql`UPDATE users SET name = COALESCE(${name}, name), phone_number = COALESCE(${phone_number}, phone_number), bio = COALESCE(${bio}, bio) WHERE user_id = ${user.user_id} RETURNING user_id, name, email, phone_number, role, bio, resume, profile_pic, subscription`;
+
+    if (skills && Array.isArray(skills)) {
+        // Delete existing skills
+        await sql`DELETE FROM user_skills WHERE user_id = ${user.user_id}`;
+
+        // Insert new skills
+        for (const skillName of skills) {
+            let skillRecord = await sql`SELECT skill_id FROM skills WHERE name = ${skillName}`;
+            let skillId;
+            if (skillRecord.length === 0) {
+                const insertedSkill = await sql`INSERT INTO skills (name) VALUES (${skillName}) RETURNING skill_id`;
+                skillId = insertedSkill[0].skill_id;
+            } else {
+                skillId = skillRecord[0].skill_id;
+            }
+            await sql`INSERT INTO user_skills (user_id, skill_id) VALUES (${user.user_id}, ${skillId})`;
+        }
+    }
+
+    res.status(200).json({
+        success: true,
+        data: updatedUser[0],
+        skills: skills || []
+    });
+ });
