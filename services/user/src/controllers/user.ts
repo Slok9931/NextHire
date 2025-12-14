@@ -127,3 +127,160 @@ export const updateResume = tryCatch(
     });
   }
 );
+
+export const searchSkills = tryCatch(
+  async (req, res, next) => {
+    const { query } = req.query;
+    
+    if (!query || typeof query !== 'string' || query.trim() === '') {
+      return res.status(200).json({
+        success: true,
+        data: [],
+      });
+    }
+    
+    const searchTerm = query.trim();
+    
+    const skills = await sql`
+      SELECT skill_id, name 
+      FROM skills 
+      WHERE LOWER(name) LIKE LOWER(${'%' + searchTerm + '%'}) 
+      ORDER BY 
+        CASE 
+          WHEN LOWER(name) = LOWER(${searchTerm}) THEN 1
+          WHEN LOWER(name) LIKE LOWER(${searchTerm + '%'}) THEN 2
+          ELSE 3
+        END,
+        name
+      LIMIT 10
+    `;
+    
+    res.status(200).json({
+      success: true,
+      data: skills,
+    });
+  }
+);
+
+export const getAllSkills = tryCatch(
+  async (req, res, next) => {
+    const skills = await sql`
+      SELECT skill_id, name 
+      FROM skills 
+      ORDER BY name
+    `;
+    
+    res.status(200).json({
+      success: true,
+      data: skills,
+    });
+  }
+);
+
+export const addSkillsToUser = tryCatch(
+  async (req: AuthenticatedRequest, res, next) => {
+    const userId = req.user?.user_id;
+    
+    const { skillName, skillId } = req.body;
+    
+    // User can either provide skillId (selecting existing) or skillName (creating new)
+    if (!skillId && (!skillName || skillName.trim() === "")) {
+      throw new ErrorHandler("Either skill ID or skill name is required", 400);
+    }
+    
+    let finalSkillId = skillId;
+    let alreadyExists = false;
+    let isNewSkill = false;
+
+    try {
+      await sql`BEGIN`;
+      
+      const users = await sql`SELECT user_id FROM users WHERE user_id = ${userId}`;
+      if (users.length === 0) {
+        throw new ErrorHandler("User not found", 404);
+      }
+      
+      if (skillId) {
+        const existingSkill = await sql`SELECT skill_id FROM skills WHERE skill_id = ${skillId}`;
+        if (existingSkill.length === 0) {
+          throw new ErrorHandler("Skill not found", 404);
+        }
+      } else {
+        const trimmedSkillName = skillName.trim();
+        const existingSkill = await sql`
+          SELECT skill_id 
+          FROM skills 
+          WHERE LOWER(name) = LOWER(${trimmedSkillName})
+        `;
+        
+        if (existingSkill.length > 0) {
+          finalSkillId = existingSkill[0].skill_id;
+        } else {
+          const [newSkill] = await sql`
+            INSERT INTO skills (name) 
+            VALUES (${trimmedSkillName}) 
+            RETURNING skill_id
+          `;
+          finalSkillId = newSkill.skill_id;
+          isNewSkill = true;
+        }
+      }
+      
+      const insertResult = await sql`
+        INSERT INTO user_skills (user_id, skill_id) 
+        VALUES (${userId}, ${finalSkillId}) 
+        ON CONFLICT (user_id, skill_id) DO NOTHING 
+        RETURNING user_id
+      `;
+      
+      if (insertResult.length === 0) {
+        alreadyExists = true;
+      }
+      
+      await sql`COMMIT`;
+    } catch (error) {
+      await sql`ROLLBACK`;
+      throw error;
+    }
+
+    if (alreadyExists) {
+      return res.status(200).json({
+        success: true,
+        message: "Skill already exists for the user",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: isNewSkill ? "New skill created and added successfully" : "Skill added successfully",
+    });
+  }
+);
+
+export const removeSkillFromUser = tryCatch(
+  async (req: AuthenticatedRequest, res, next) => {
+        const user = req.user;
+
+        if(!user) {
+          throw new ErrorHandler("Unauthorized", 401);
+        }
+
+        const {skillName} = req.body;
+
+        if(!skillName || skillName.trim() === "") {
+          throw new ErrorHandler("Skill name is required", 400);
+        }
+
+        const deleteResult =
+            await sql`DELETE FROM user_skills WHERE user_id = ${user.user_id} AND skill_id = (SELECT skill_id FROM skills WHERE name = ${skillName.trim()}) RETURNING user_id`;
+
+        if (deleteResult.length === 0) {
+          throw new ErrorHandler("Skill not associated with the user", 404);
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Skill removed successfully",
+        });
+  }
+);
