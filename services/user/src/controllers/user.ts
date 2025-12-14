@@ -88,7 +88,7 @@ export const updateProfilePicture = tryCatch(
     if (!file) {
       throw new ErrorHandler("No file uploaded", 400);
     }
-
+    
     const oldPublicId = user.profile_pic_public_id;
 
     const fileBuffer = getBuffer(file);
@@ -104,6 +104,43 @@ export const updateProfilePicture = tryCatch(
 
     const [updatedUser] =
         await sql`UPDATE users SET profile_pic = ${uploadResult.url}, profile_pic_public_id = ${uploadResult.public_id} WHERE user_id = ${user.user_id} RETURNING user_id, name, email, phone_number, role, bio, resume, profile_pic, subscription`; 
+
+    res.status(200).json({
+      success: true,
+      data: updatedUser,
+    });
+  }
+);
+
+export const updateResume = tryCatch(
+  async (req: AuthenticatedRequest, res, next) => {
+    const user = req.user;
+
+    if (!user) {
+      throw new ErrorHandler("Unauthorized", 401);
+    }
+
+    const file = req.file;
+
+    if (!file) {
+      throw new ErrorHandler("No file uploaded", 400);
+    }
+
+    const oldPublicId = user.resume_public_id;
+
+    const fileBuffer = getBuffer(file);
+        
+    if (!fileBuffer || !fileBuffer.content) {
+      throw new ErrorHandler("Error processing the uploaded file", 500);
+    }
+        
+    const { data: uploadResult } = await axios.post(
+      `${process.env.FILE_UPLOAD_SERVICE_URL}/api/utils/upload`,
+      { buffer: fileBuffer.content, public_id: oldPublicId }
+    );
+
+    const [updatedUser] =
+        await sql`UPDATE users SET resume = ${uploadResult.url}, resume_public_id = ${uploadResult.public_id} WHERE user_id = ${user.user_id} RETURNING user_id, name, email, phone_number, role, bio, resume, profile_pic, subscription`; 
 
     res.status(200).json({
       success: true,

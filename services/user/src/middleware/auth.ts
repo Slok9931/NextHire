@@ -37,7 +37,7 @@ export const isAuth = async (req: AuthenticatedRequest, res: Response, next: Nex
             return;
         }
 
-        const users = await sql`SELECT u.user_id, u.name, u.email, u.phone_number, u.role, u.bio, u.resume, u.profile_pic, u.subscription, ARRAY_AGG(s.name) FILTER(WHERE s.name IS NOT NULL) as skills FROM users u LEFT JOIN user_skills us ON u.user_id = us.user_id LEFT JOIN skills s ON us.skill_id = s.skill_id WHERE u.user_id = ${decodedToken.user_id} GROUP BY u.user_id`;
+        const users = await sql`SELECT u.user_id, u.name, u.email, u.phone_number, u.role, u.bio, u.resume, u.resume_public_id, u.profile_pic, u.profile_pic_public_id, u.subscription, ARRAY_AGG(s.name) FILTER(WHERE s.name IS NOT NULL) as skills FROM users u LEFT JOIN user_skills us ON u.user_id = us.user_id LEFT JOIN skills s ON us.skill_id = s.skill_id WHERE u.user_id = ${decodedToken.user_id} GROUP BY u.user_id`;
 
         if (users.length === 0) {
             res.status(401).json({ message: 'User assosciated with this token no longer exists' });
