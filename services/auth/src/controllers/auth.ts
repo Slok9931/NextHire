@@ -164,7 +164,6 @@ export const loginUser = tryCatch(async (req, res, next) => {
         success: true,
         message: "User logged in successfully",
         user: user,
-        skills: userSkills,
         token: token
     });
 })
