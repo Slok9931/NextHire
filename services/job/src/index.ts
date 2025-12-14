@@ -21,11 +21,59 @@ async function initDB() {
         END
         $$;
         `
+        await sql`
+        CREATE TABLE IF NOT EXISTS companies (
+            company_id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL UNIQUE,
+            description TEXT NOT NULL,
+            website VARCHAR(255) NOT NULL,
+            logo VARCHAR(255) NOT NULL,
+            logo_public_id VARCHAR(255) NOT NULL,
+            recruiter_id INT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+        `
+        await sql`
+        CREATE TABLE IF NOT EXISTS jobs (
+            job_id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            location VARCHAR(255),
+            job_type job_type NOT NULL,
+            salary NUMERIC(10, 2),
+            openings NUMERIC(3, 1) NOT NULL,
+            role VARCHAR(255) NOT NULL,
+            responsibilities TEXT NOT NULL,
+            qualifications TEXT NOT NULL,
+            work_location work_location NOT NULL,
+            company_id INT NOT NULL REFERENCES companies(company_id) ON DELETE CASCADE,
+            posted_by_recruiter_id INT NOT NULL,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE
+        );
+        `
+        await sql`
+        CREATE TABLE IF NOT EXISTS applications (
+            application_id SERIAL PRIMARY KEY,
+            job_id INT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
+            applicant_id INT NOT NULL,
+            applicant_email VARCHAR(255) NOT NULL,
+            status application_status NOT NULL DEFAULT 'applied',
+            resume VARCHAR(255) NOT NULL,
+            subscribed BOOLEAN NOT NULL DEFAULT TRUE,
+            applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE (job_id, applicant_id)
+        );
+        `
+        console.log("✅ Database initialized successfully");
     } catch (error) {
-        
+        console.log("❌ Error initializing database:", error);
+        process.exit(1);
     }
 }
 
-app.listen(process.env.PORT, () => {
-  console.log(`Job service is running on port ${process.env.PORT}`);
-});
+initDB().then(() => {
+    app.listen(process.env.PORT, () => {
+      console.log(`Job service is running on port ${process.env.PORT}`);
+    });
+})
