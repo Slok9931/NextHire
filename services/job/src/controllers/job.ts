@@ -204,3 +204,221 @@ export const getCompanyDetails = tryCatch(async (req: AuthenticatedRequest, res)
         }
     })
 })
+
+export const getAllJobs = tryCatch(async (req, res) => {
+  const {
+    search,
+    role,
+    min_salary,
+    max_salary,
+    job_type,
+    work_location,
+    min_openings,
+    max_openings,
+    is_active,
+    company_id,
+    page = 1,
+    limit = 10,
+  } = req.query;
+
+  // Convert page and limit to numbers
+  const pageNum = Math.max(1, parseInt(page as string) || 1);
+  const limitNum = Math.max(1, parseInt(limit as string) || 10);
+  const offset = (pageNum - 1) * limitNum;
+
+  // Build conditions using template literal approach
+  let conditions = [];
+
+  // Search filter
+  if (search && typeof search === "string" && search.trim()) {
+    const searchTerm = `%${search.trim()}%`;
+    conditions.push(sql`(
+      LOWER(j.title) LIKE LOWER(${searchTerm}) OR 
+      LOWER(j.description) LIKE LOWER(${searchTerm}) OR 
+    )`);
+  }
+
+  // Role filter - supports multiple values
+  if (role) {
+    let roleArray: string[];
+    if (typeof role === "string") {
+      roleArray = role.split(",").map((r) => r.trim()).filter((r) => r);
+    } else if (Array.isArray(role)) {
+      roleArray = role.map((r) => String(r).trim()).filter((r) => r);
+    } else {
+      roleArray = [];
+    }
+
+    if (roleArray.length > 0) {
+      if (roleArray.length === 1) {
+        conditions.push(sql`LOWER(j.role) LIKE LOWER(${`%${roleArray[0]}%`})`);
+      } else {
+        // Create OR conditions for multiple roles
+        let roleCondition = sql`LOWER(j.role) LIKE LOWER(${`%${roleArray[0]}%`})`;
+        for (let i = 1; i < roleArray.length; i++) {
+          roleCondition = sql`${roleCondition} OR LOWER(j.role) LIKE LOWER(${`%${roleArray[i]}%`})`;
+        }
+        conditions.push(sql`(${roleCondition})`);
+      }
+    }
+  }
+
+  // Salary range filters
+  if (min_salary) {
+    const minSal = parseFloat(min_salary as string);
+    if (!isNaN(minSal)) {
+      conditions.push(sql`j.salary >= ${minSal}`);
+    }
+  }
+
+  if (max_salary) {
+    const maxSal = parseFloat(max_salary as string);
+    if (!isNaN(maxSal)) {
+      conditions.push(sql`j.salary <= ${maxSal}`);
+    }
+  }
+
+  // Job type filter
+  if (job_type && typeof job_type === "string") {
+    const validJobTypes = ["full_time", "part_time", "contract", "internship"];
+    if (validJobTypes.includes(job_type)) {
+      conditions.push(sql`j.job_type = ${job_type}`);
+    }
+  }
+
+  // Work location filter - supports multiple values
+  if (work_location) {
+    let locationArray: string[];
+    if (typeof work_location === "string") {
+      locationArray = work_location.split(",").map((l) => l.trim()).filter((l) => l);
+    } else if (Array.isArray(work_location)) {
+      locationArray = work_location.map((l) => String(l).trim()).filter((l) => l);
+    } else {
+      locationArray = [];
+    }
+
+    const validWorkLocations = ["onsite", "remote", "hybrid"];
+    const filteredLocations = locationArray.filter((loc) =>
+      validWorkLocations.includes(loc)
+    );
+
+    if (filteredLocations.length > 0) {
+      conditions.push(sql`j.work_location = ANY(${filteredLocations})`);
+    }
+  }
+
+  // Openings range filters
+  if (min_openings) {
+    const minOpen = parseFloat(min_openings as string);
+    if (!isNaN(minOpen)) {
+      conditions.push(sql`j.openings >= ${minOpen}`);
+    }
+  }
+
+  if (max_openings) {
+    const maxOpen = parseFloat(max_openings as string);
+    if (!isNaN(maxOpen)) {
+      conditions.push(sql`j.openings <= ${maxOpen}`);
+    }
+  }
+
+  // Active status filter
+  if (is_active !== undefined) {
+    const isActiveBoolean = is_active === "true";
+    conditions.push(sql`j.is_active = ${isActiveBoolean}`);
+  }
+
+  // Company ID filter - supports multiple values
+  if (company_id) {
+    let companyArray: number[];
+    if (typeof company_id === "string") {
+      companyArray = company_id.split(",").map((c) => parseInt(c.trim())).filter((c) => !isNaN(c));
+    } else if (Array.isArray(company_id)) {
+      companyArray = company_id.map((c) => parseInt(String(c))).filter((c) => !isNaN(c));
+    } else {
+      const compIdNum = parseInt(String(company_id));
+      companyArray = !isNaN(compIdNum) ? [compIdNum] : [];
+    }
+
+    if (companyArray.length > 0) {
+      conditions.push(sql`j.company_id = ANY(${companyArray})`);
+    }
+  }
+
+  try {
+    let countResult, jobs;
+
+    if (conditions.length === 0) {
+      // No filters - simple queries
+      [countResult, jobs] = await Promise.all([
+        sql`
+          SELECT COUNT(*) as total 
+          FROM jobs j 
+          JOIN companies c ON j.company_id = c.company_id
+        `,
+        sql`
+          SELECT 
+            j.job_id, j.title, j.description, j.location, j.job_type,
+            j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
+            j.work_location, j.created_at, j.is_active,
+            c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website
+          FROM jobs j
+          JOIN companies c ON j.company_id = c.company_id
+          ORDER BY j.created_at DESC
+          LIMIT ${limitNum} OFFSET ${offset}
+        `
+      ]);
+    } else {
+      // With filters - build WHERE clause properly
+      let whereClause = conditions[0];
+      for (let i = 1; i < conditions.length; i++) {
+        whereClause = sql`${whereClause} AND ${conditions[i]}`;
+      }
+
+      [countResult, jobs] = await Promise.all([
+        sql`
+          SELECT COUNT(*) as total
+          FROM jobs j
+          JOIN companies c ON j.company_id = c.company_id
+          WHERE ${whereClause}
+        `,
+        sql`
+          SELECT 
+            j.job_id, j.title, j.description, j.location, j.job_type,
+            j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
+            j.work_location, j.created_at, j.is_active,
+            c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website
+          FROM jobs j
+          JOIN companies c ON j.company_id = c.company_id
+          WHERE ${whereClause}
+          ORDER BY j.created_at DESC
+          LIMIT ${limitNum} OFFSET ${offset}
+        `
+      ]);
+    }
+
+    const total = countResult && countResult.length > 0 ? 
+      parseInt(String(countResult[0].total || 0)) : 0;
+
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        jobs,
+        pagination: {
+          current_page: pageNum,
+          total_pages: totalPages,
+          total_jobs: total,
+          jobs_per_page: limitNum,
+          has_next_page: pageNum < totalPages,
+          has_prev_page: pageNum > 1,
+        },
+      },
+    });
+
+  } catch (error) {
+    console.error("Database query error:", error);
+    throw new ErrorHandler("Failed to fetch jobs", 500);
+  }
+});
