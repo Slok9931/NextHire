@@ -177,3 +177,30 @@ export const getAllCompanyByRecruiter = tryCatch(async (req: AuthenticatedReques
         }
     })
 })
+
+export const getCompanyDetails = tryCatch(async (req: AuthenticatedRequest, res) => { 
+    const { companyId } = req.params
+
+    if(!companyId) {
+        throw new ErrorHandler("Company ID is required.", 400)
+    }
+
+    const company = await sql`
+        SELECT c.*, COALESCE(
+            (SELECT json_agg(j.*) FROM jobs j WHERE j.company_id = c.company_id),
+            '[]'::json
+        ) AS jobs
+        FROM companies c
+        WHERE c.company_id = ${companyId} GROUP BY c.company_id;` // SQL query to get company details along with its jobs
+
+    if(company.length === 0) {
+        throw new ErrorHandler("Company not found.", 404)
+    }
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            company: company[0]
+        }
+    })
+})
