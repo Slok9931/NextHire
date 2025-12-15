@@ -458,9 +458,8 @@ export const getJobDetails = tryCatch(async (req: AuthenticatedRequest, res) => 
     }
 
     const job = await sql`
-        SELECT j.*, c.name as company_name, c.logo as company_logo, c.website as company_website
+        SELECT j.*
         FROM jobs j
-        JOIN companies c ON j.company_id = c.company_id
         WHERE j.job_id = ${jobId}
     `
 
