@@ -51,7 +51,7 @@ export const createCompany = tryCatch(async (req:AuthenticatedRequest, res) => {
         RETURNING *
     `
 
-    res.status(201).json({
+    res.status(200).json({
         status: "success",
         data: {
             company: result[0]
@@ -82,5 +82,85 @@ export const deleteCompany = tryCatch(async (req: AuthenticatedRequest, res) => 
     res.status(200).json({
         status: "success",
         message: "Company deleted successfully."
+    })
+})
+
+export const createJob = tryCatch(async (req: AuthenticatedRequest, res) => { 
+    const user = req.user
+    if (!user) {
+        throw new ErrorHandler("Authentication required.", 401)
+    }
+
+    if(user.role !== 'recruiter') {
+        throw new ErrorHandler("Only recruiters can create job postings.", 403)
+    }
+
+    const { title, description, salary, location, role, responsibilities, qualifications, job_type, work_location, company_id, openings } = req.body
+
+    if(!title || !description || !salary || !location || !role || !responsibilities || !qualifications || !openings) {
+        throw new ErrorHandler("All fields are required to create a job posting.", 400)
+    }
+
+    const company = await sql`
+        SELECT * FROM companies WHERE company_id = ${company_id} AND recruiter_id = ${user.user_id}
+    `
+
+    if(company.length === 0) {
+        throw new ErrorHandler("Company not found or you are not authorised to post jobs for this company.", 404)
+    }
+
+    const result = await sql`
+        INSERT INTO jobs (title, description, location, salary, role, responsibilities, qualifications, job_type, work_location, company_id, posted_by_recruiter_id, openings)
+        VALUES (${title}, ${description}, ${location}, ${salary}, ${role}, ${responsibilities}, ${qualifications}, ${job_type}, ${work_location}, ${company_id}, ${user.user_id}, ${openings})
+        RETURNING *
+    `
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            job: result[0]
+        }
+    })
+})
+
+export const updateJob = tryCatch(async (req: AuthenticatedRequest, res) => { 
+    const user = req.user
+    if (!user) {
+        throw new ErrorHandler("Authentication required.", 401)
+    }
+
+    const { jobId } = req.params
+    const { title, description, salary, location, role, responsibilities, qualifications, job_type, work_location, openings, is_active } = req.body
+
+    const job = await sql`
+        SELECT * FROM jobs WHERE job_id = ${jobId} AND posted_by_recruiter_id = ${user.user_id}
+    `
+
+    if(job.length === 0) {
+        throw new ErrorHandler("Job not found or you are not authorised to update it.", 404)
+    }
+
+    const updatedJob = await sql`
+        UPDATE jobs
+        SET title = ${title},
+            description = ${description},
+            salary = ${salary},
+            location = ${location},
+            role = ${role},
+            responsibilities = ${responsibilities},
+            qualifications = ${qualifications},
+            job_type = ${job_type},
+            work_location = ${work_location},
+            openings = ${openings},
+            is_active = ${is_active}
+        WHERE job_id = ${jobId}
+        RETURNING *
+    `
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            job: updatedJob[0]
+        }
     })
 })
