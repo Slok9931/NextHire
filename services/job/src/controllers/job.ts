@@ -58,3 +58,29 @@ export const createCompany = tryCatch(async (req:AuthenticatedRequest, res) => {
         }
     })
 })
+
+export const deleteCompany = tryCatch(async (req: AuthenticatedRequest, res) => {
+    const user = req.user
+    if (!user) {
+        throw new ErrorHandler("Authentication required.", 401)
+    }
+
+    const { companyId } = req.params
+
+    const company = await sql`
+        SELECT * FROM companies WHERE company_id = ${companyId} AND recruiter_id = ${user.user_id}
+    `
+
+    if (company.length === 0) {
+        throw new ErrorHandler("Company not found or you are not authorised to delete it.", 404)
+    }
+
+    await sql`
+        DELETE FROM companies WHERE company_id = ${companyId}
+    `
+
+    res.status(200).json({
+        status: "success",
+        message: "Company deleted successfully."
+    })
+})
