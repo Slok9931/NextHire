@@ -423,3 +423,29 @@ export const getAllJobs = tryCatch(async (req, res) => {
     throw new ErrorHandler("Failed to fetch jobs", 500);
   }
 });
+
+export const getAllCompany = tryCatch(async (req, res) => { 
+    const companies = await sql`
+        SELECT company_id, name, logo FROM companies
+    `
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            companies
+        }
+    })
+})
+
+export const getAllRoles = tryCatch(async (req, res) => { 
+    const roles = await sql`
+        SELECT DISTINCT role FROM jobs
+    `
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            roles: roles.map(r => r.role)
+        }
+    })
+})
