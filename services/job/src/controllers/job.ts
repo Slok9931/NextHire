@@ -164,3 +164,16 @@ export const updateJob = tryCatch(async (req: AuthenticatedRequest, res) => {
         }
     })
 })
+
+export const getAllCompanyByRecruiter = tryCatch(async (req: AuthenticatedRequest, res) => { 
+    const companies = await sql`
+        SELECT company_id, name, description, website, logo, created_at FROM companies WHERE recruiter_id = ${req.user?.user_id}
+    `
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            companies
+        }
+    })
+})
