@@ -52,7 +52,8 @@ export const createCompany = tryCatch(async (req:AuthenticatedRequest, res) => {
     `
 
     res.status(200).json({
-        status: "success",
+      status: "success",
+      message: "Company created successfully.",
         data: {
             company: result[0]
         }
@@ -81,7 +82,8 @@ export const deleteCompany = tryCatch(async (req: AuthenticatedRequest, res) => 
 
     res.status(200).json({
         status: "success",
-        message: "Company deleted successfully."
+        message: "Company deleted successfully.",
+        data: null
     })
 })
 
@@ -117,6 +119,7 @@ export const createJob = tryCatch(async (req: AuthenticatedRequest, res) => {
 
     res.status(200).json({
         status: "success",
+        message: "Job created successfully.",
         data: {
             job: result[0]
         }
@@ -159,6 +162,7 @@ export const updateJob = tryCatch(async (req: AuthenticatedRequest, res) => {
 
     res.status(200).json({
         status: "success",
+        message: "Job updated successfully.",
         data: {
             job: updatedJob[0]
         }
@@ -172,6 +176,7 @@ export const getAllCompanyByRecruiter = tryCatch(async (req: AuthenticatedReques
 
     res.status(200).json({
         status: "success",
+        message: "Companies fetched successfully.",
         data: {
             companies
         }
@@ -199,6 +204,7 @@ export const getCompanyDetails = tryCatch(async (req: AuthenticatedRequest, res)
 
     res.status(200).json({
         status: "success",
+        message: "Company details fetched successfully.",
         data: {
             company: company[0]
         }
@@ -405,6 +411,7 @@ export const getAllJobs = tryCatch(async (req, res) => {
 
     res.status(200).json({
       status: "success",
+      message: "Jobs fetched successfully.",
       data: {
         jobs,
         pagination: {
@@ -431,6 +438,7 @@ export const getAllCompany = tryCatch(async (req, res) => {
 
     res.status(200).json({
         status: "success",
+        message: "Companies fetched successfully.",
         data: {
             companies
         }
@@ -444,6 +452,7 @@ export const getAllRoles = tryCatch(async (req, res) => {
 
     res.status(200).json({
         status: "success",
+        message: "Roles fetched successfully.",
         data: {
             roles: roles.map(r => r.role)
         }
@@ -469,6 +478,7 @@ export const getJobDetails = tryCatch(async (req: AuthenticatedRequest, res) => 
 
     res.status(200).json({
         status: "success",
+        message: "Job details fetched successfully.",
         data: {
             job: job[0]
         }
