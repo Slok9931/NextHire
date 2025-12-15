@@ -10,6 +10,7 @@ export const myProfile = tryCatch(
     const user = req.user;
     res.status(200).json({
       success: true,
+      message: "User profile fetched successfully",
       data: user,
     });
   }
@@ -30,6 +31,7 @@ export const getUserProfile = tryCatch(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: "User profile fetched successfully",
     data: user,
   });
 });
@@ -49,6 +51,7 @@ export const updateUserProfile = tryCatch(
 
     res.status(200).json({
       success: true,
+      message: "User profile updated successfully",
       data: updatedUser[0],
     });
   }
@@ -86,6 +89,7 @@ export const updateProfilePicture = tryCatch(
 
     res.status(200).json({
       success: true,
+      message: "Profile picture updated successfully",
       data: updatedUser,
     });
   }
@@ -123,6 +127,7 @@ export const updateResume = tryCatch(
 
     res.status(200).json({
       success: true,
+      message: "Resume updated successfully",
       data: updatedUser,
     });
   }
@@ -134,6 +139,7 @@ export const searchSkills = tryCatch(async (req, res, next) => {
   if (!query || typeof query !== "string" || query.trim() === "") {
     return res.status(200).json({
       success: true,
+      message: "No search query provided",
       data: [],
     });
   }
@@ -156,6 +162,7 @@ export const searchSkills = tryCatch(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: "Skills fetched successfully",
     data: skills,
   });
 });
@@ -169,6 +176,7 @@ export const getAllSkills = tryCatch(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
+    message: "All skills fetched successfully",
     data: skills,
   });
 });
@@ -245,6 +253,7 @@ export const addSkillsToUser = tryCatch(
       return res.status(200).json({
         success: true,
         message: "Skill already exists for the user",
+        data: null,
       });
     }
 
@@ -253,6 +262,7 @@ export const addSkillsToUser = tryCatch(
       message: isNewSkill
         ? "New skill created and added successfully"
         : "Skill added successfully",
+      data: { skillId: finalSkillId },
     });
   }
 );
@@ -282,6 +292,67 @@ export const removeSkillFromUser = tryCatch(
     res.status(200).json({
       success: true,
       message: "Skill removed successfully",
+      data: null,
+    });
+  }
+);
+
+export const applyForJob = tryCatch(
+  async (req: AuthenticatedRequest, res, next) => {
+    const user = req.user;
+
+    if (!user) {
+      throw new ErrorHandler("Unauthorized", 401);
+    }
+
+    if (user.role !== 'jobseeker') {
+      throw new ErrorHandler("You are not allowed for this action", 403);
+    }
+
+    const resume = user.resume;
+    
+    if (!resume) {
+      throw new ErrorHandler("Please upload your resume before applying", 400);
+    }
+
+    const { jobId } = req.body;
+
+    if (!jobId) {
+      throw new ErrorHandler("Job ID is required", 400);
+    }
+
+    const job = await sql`SELECT is_active FROM jobs WHERE job_id = ${jobId}`;
+
+    if (job.length === 0) {
+      throw new ErrorHandler("Job not found", 404);
+    }
+
+    if (!job[0].is_active) {
+      throw new ErrorHandler("Cannot apply to an inactive job", 400);
+    }
+
+    const now = Date.now();
+
+    const subTime = user.subscription ? new Date(user.subscription) : 0;
+
+    const isSubscribed = subTime && subTime.getTime() > now;
+
+    let newApplication;
+
+    try {
+      newApplication =
+        await sql`INSERT INTO applications (job_id, applicant_id, applicant_email, resume, subscribed) VALUES (${jobId}, ${user.user_id}, ${user.email}, ${resume}, ${isSubscribed}) RETURNING application_id`;
+    } catch (error:any) {
+      if (error.code === "23505") { // unique_violation
+        throw new ErrorHandler("You have already applied for this job", 409);
+      }
+      throw error;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Job application submitted successfully",
+      data: newApplication[0],
     });
   }
 );
