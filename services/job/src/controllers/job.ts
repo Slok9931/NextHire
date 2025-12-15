@@ -449,3 +449,29 @@ export const getAllRoles = tryCatch(async (req, res) => {
         }
     })
 })
+
+export const getJobDetails = tryCatch(async (req: AuthenticatedRequest, res) => { 
+    const { jobId } = req.params
+
+    if(!jobId) {
+        throw new ErrorHandler("Job ID is required.", 400)
+    }
+
+    const job = await sql`
+        SELECT j.*, c.name as company_name, c.logo as company_logo, c.website as company_website
+        FROM jobs j
+        JOIN companies c ON j.company_id = c.company_id
+        WHERE j.job_id = ${jobId}
+    `
+
+    if(job.length === 0) {
+        throw new ErrorHandler("Job not found.", 404)
+    }
+
+    res.status(200).json({
+        status: "success",
+        data: {
+            job: job[0]
+        }
+    })
+})
