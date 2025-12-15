@@ -315,7 +315,7 @@ export const applyForJob = tryCatch(
       throw new ErrorHandler("Please upload your resume before applying", 400);
     }
 
-    const { jobId } = req.body;
+    const { jobId } = req.params;
 
     if (!jobId) {
       throw new ErrorHandler("Job ID is required", 400);
