@@ -1,6 +1,6 @@
 import express from 'express'
 import { isAuth } from '../middleware/auth.js'
-import { addSkillsToUser, applyForJob, getAllApplications, getAllSkills, getUserProfile, myProfile, removeSkillFromUser, searchSkills, updateProfilePicture, updateResume, updateUserProfile } from '../controllers/user.js'
+import { addSkillsToUser, applyForJob, getMyApplications, getAllSkills, getUserProfile, myProfile, removeSkillFromUser, searchSkills, updateProfilePicture, updateResume, updateUserProfile } from '../controllers/user.js'
 import uploadFile from '../middleware/multer.js'
 
 const router = express.Router();
@@ -15,6 +15,6 @@ router.delete('/skill/remove', isAuth, removeSkillFromUser);
 router.get('/skill/search', searchSkills);
 router.get('/skill', getAllSkills);
 router.post('/apply/:jobId', isAuth, applyForJob);
-router.get('applications', isAuth, getAllApplications);
+router.get('/applications/me', isAuth, getMyApplications);
 
 export default router

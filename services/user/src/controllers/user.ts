@@ -357,15 +357,18 @@ export const applyForJob = tryCatch(
   }
 )
 
-export const getAllApplications = tryCatch(
+export const getMyApplications = tryCatch(
   async (req: AuthenticatedRequest, res, next) => {
-    const user = req.user;
-
-    if (!user) {
-      throw new ErrorHandler("Unauthorized", 401);
-    }
-
-    const applications = await sql`SELECT a.*, j.title AS job_title, j.salary AS job_salary, j.location AS job_location FROM applications a JOIN jobs j ON a.job_id = j.job_id WHERE a.applicant_id = ${user.user_id}`;
+    const applications = await sql`
+      SELECT 
+        a.*,
+        j.title AS job_title,
+        j.salary AS job_salary,
+        j.location AS job_location
+      FROM applications a 
+      JOIN jobs j ON a.job_id = j.job_id
+      WHERE a.applicant_id = ${req.user?.user_id}
+    `;
 
     res.status(200).json({
       success: true,
