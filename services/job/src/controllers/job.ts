@@ -235,6 +235,7 @@ export const getAllJobs = tryCatch(async (req, res) => {
     conditions.push(sql`(
       LOWER(j.title) LIKE LOWER(${searchTerm}) OR 
       LOWER(j.description) LIKE LOWER(${searchTerm}) OR 
+      LOWER(c.name) LIKE LOWER(${searchTerm})
     )`);
   }
 
