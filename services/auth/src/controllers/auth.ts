@@ -37,7 +37,8 @@ export const requestOTP = tryCatch(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: "OTP has been sent to your email"
+        message: "OTP has been sent to your email",
+        data: { email }
     });
 });
 
@@ -65,7 +66,8 @@ export const verifyOTP = tryCatch(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: "Email verified successfully. You can now register."
+        message: "Email verified successfully. You can now register.",
+        data: { email }
     });
 });
 
@@ -128,7 +130,7 @@ export const registerUser = tryCatch(async (req, res, next) => {
     res.status(201).json({
         success: true,
         message: "User registered successfully",
-        user: registeredUser,
+        data: registeredUser,
         token: token
     });
 })
@@ -163,7 +165,7 @@ export const loginUser = tryCatch(async (req, res, next) => {
     res.status(200).json({
         success: true,
         message: "User logged in successfully",
-        user: user,
+        data: user,
         token: token
     });
 })
@@ -179,7 +181,8 @@ export const forgotPassword = tryCatch(async (req, res, next) => {
     if(users.length === 0) {
         return res.status(200).json({
             success: true,
-            message: "If an account with that email exists, a password reset link has been sent."
+            message: "If an account with that email exists, a password reset link has been sent.",
+            data: {}
         });
     }
 
@@ -201,7 +204,8 @@ export const forgotPassword = tryCatch(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: "If an account with that email exists, a password reset link has been sent."
+        message: "If an account with that email exists, a password reset link has been sent.",
+        data: {}
     });
 })
 
@@ -242,6 +246,7 @@ export const resetPassword = tryCatch(async (req, res, next) => {
 
     res.status(200).json({
         success: true,
-        message: "Password has been reset successfully"
+        message: "Password has been reset successfully",
+        data: {}
     });
 })
