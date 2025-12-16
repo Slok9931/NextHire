@@ -5,7 +5,7 @@ import ErrorHandler from "../utils/errorHandler.js"
 import { tryCatch } from "../utils/tryCatch.js"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
-import { forgetPasswordTemplate, verifyEmailTemplate } from "../utils/template.js"
+import { forgetPasswordTemplate, verifyEmailTemplate, welcomeTemplate } from "../utils/template.js"
 import { publishToTopic } from "../producer.js"
 import { redisClient } from "../index.js"
 
@@ -122,6 +122,14 @@ export const registerUser = tryCatch(async (req, res, next) => {
         `
         registeredUser = user
     }
+
+    const message = {
+        to: email,
+        subject: "Welcome to NextHire!",
+        html: welcomeTemplate(registerUser.name)
+    }
+
+    publishToTopic('send-mail', message);
 
     const token = jwt.sign({ user_id: registeredUser?.user_id, role: registeredUser?.role }, process.env.JWT_SECRET as string, { expiresIn: '15d' });
 
