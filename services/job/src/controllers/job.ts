@@ -484,3 +484,44 @@ export const getJobDetails = tryCatch(async (req: AuthenticatedRequest, res) => 
         }
     })
 })
+
+export const getAllApplicationsForJob = tryCatch(async (req: AuthenticatedRequest, res) => { 
+    const user = req.user
+    if (!user) {
+        throw new ErrorHandler("Authentication required.", 401)
+    }
+  
+    if(user.role !== 'recruiter') {
+        throw new ErrorHandler("Only recruiters can view job applications.", 403)
+    }
+
+    const { jobId } = req.params
+
+    const job = await sql`
+        SELECT posted_by_recruiter_id FROM jobs WHERE job_id = ${jobId}
+    `
+
+    if(job.length === 0) {
+        throw new ErrorHandler("Job not found.", 404)
+    }
+  
+    if(job[0].posted_by_recruiter_id !== user.user_id) {
+        throw new ErrorHandler("You are not authorised to view applications for this job.", 403)
+    }
+
+    const applications = await sql`
+        SELECT a.*, u.name as applicant_name, u.email as applicant_email
+        FROM applications a
+        JOIN users u ON a.applicant_id = u.user_id
+        WHERE a.job_id = ${jobId}
+        ORDER BY a.subscribed DESC, a.applied_at ASC
+    `
+
+    res.status(200).json({
+        status: "success",
+        message: "Applications fetched successfully.",
+        data: {
+            applications
+        }
+    })
+})
