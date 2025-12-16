@@ -1,7 +1,7 @@
 import express from 'express'
 import { isAuth } from '../middleware/auth.js'
 import uploadFile from '../middleware/multer.js'
-import { createCompany, createJob, deleteCompany, getAllApplicationsForJob, getAllCompany, getAllCompanyByRecruiter, getAllJobs, getAllRoles, getCompanyDetails, getJobDetails, updateJob } from '../controllers/job.js'
+import { createCompany, createJob, deleteCompany, getAllApplicationsForJob, getAllCompany, getAllCompanyByRecruiter, getAllJobs, getAllRoles, getCompanyDetails, getJobDetails, updateApplicationStatus, updateJob } from '../controllers/job.js'
 
 const router = express.Router()
 
@@ -16,5 +16,6 @@ router.get('/company', getAllCompany)
 router.get('/role', getAllRoles)
 router.get('/applications/:jobId', isAuth, getAllApplicationsForJob)
 router.get('/:jobId', isAuth, getJobDetails)
+router.put('/application/:applicationId', isAuth, updateApplicationStatus)
 
 export default router

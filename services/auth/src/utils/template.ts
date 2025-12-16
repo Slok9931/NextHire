@@ -75,7 +75,7 @@ export const verifyEmailTemplate = (otp: string): string => {
                             
                             <p style="color: #999999; font-size: 12px; line-height: 18px; margin: 20px 0 0; text-align: center;">Need help? Contact us at <a href="mailto:support@nexthire.com" style="color: #0033A0; text-decoration: none;">support@nexthire.com</a></p>
                             
-                            <p style="color: #cccccc; font-size: 11px; line-height: 16px; margin: 20px 0 0; text-align: center;">© 2024 NextHire. All rights reserved.</p>
+                            <p style="color: #cccccc; font-size: 11px; line-height: 16px; margin: 20px 0 0; text-align: center;">© 2025 NextHire. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>
@@ -142,7 +142,7 @@ export const forgetPasswordTemplate = (resetLink: string): string => {
                             
                             <p style="color: #999999; font-size: 12px; line-height: 18px; margin: 20px 0 0; text-align: center;">If you have any questions, please contact us at <a href="mailto:support@nexthire.com" style="color: #0033A0; text-decoration: none;">support@nexthire.com</a></p>
                             
-                            <p style="color: #cccccc; font-size: 11px; line-height: 16px; margin: 20px 0 0; text-align: center;">© 2024 NextHire. All rights reserved.</p>
+                            <p style="color: #cccccc; font-size: 11px; line-height: 16px; margin: 20px 0 0; text-align: center;">© 2025 NextHire. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>

@@ -88,11 +88,9 @@ export const jobStatusTemplate = (name: string, title: string, company_name: str
                     <!-- Footer -->
                     <tr>
                         <td style="padding: 30px 40px; background-color: #f8f8f8; border-radius: 0 0 8px 8px; border-top: 1px solid #eeeeee;">
-                            <p style="color: #999999; font-size: 14px; line-height: 20px; margin: 0 0 10px; text-align: center;">Best regards,<br><strong>The [COMPANY_NAME] Team</strong><br>via NextHire</p>
-                            
                             <p style="color: #999999; font-size: 12px; line-height: 18px; margin: 20px 0 0; text-align: center;">Questions? Contact us at <a href="mailto:support@nexthire.com" style="color: #0033A0; text-decoration: none;">support@nexthire.com</a></p>
                             
-                            <p style="color: #cccccc; font-size: 11px; line-height: 16px; margin: 20px 0 0; text-align: center;">© 2024 NextHire. All rights reserved.</p>
+                            <p style="color: #cccccc; font-size: 11px; line-height: 16px; margin: 20px 0 0; text-align: center;">© 2025 NextHire. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>

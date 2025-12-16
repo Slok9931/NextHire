@@ -4,6 +4,8 @@ import getBuffer from "../utils/buffer.js"
 import { sql } from "../utils/db.js"
 import ErrorHandler from "../utils/errorHandler.js"
 import { tryCatch } from "../utils/tryCatch.js"
+import { jobStatusTemplate } from "../utils/template.js"
+import { publishToTopic } from "../producer.js"
 
 export const createCompany = tryCatch(async (req:AuthenticatedRequest, res) => { 
     const user = req.user
@@ -522,6 +524,83 @@ export const getAllApplicationsForJob = tryCatch(async (req: AuthenticatedReques
         message: "Applications fetched successfully.",
         data: {
             applications
+        }
+    })
+})
+
+export const updateApplicationStatus = tryCatch(async (req: AuthenticatedRequest, res) => { 
+    const user = req.user
+    if (!user) {
+        throw new ErrorHandler("Authentication required.", 401)
+    }
+  
+    if(user.role !== 'recruiter') {
+        throw new ErrorHandler("Only recruiters can update application status.", 403)
+    }
+
+    const { applicationId } = req.params
+
+    const application = await sql`
+        SELECT *
+        FROM applications
+        WHERE application_id = ${applicationId}
+    `
+
+    if(application.length === 0) {
+        throw new ErrorHandler("Application not found.", 404)
+    }
+    
+    const job = await sql`
+        SELECT * FROM jobs WHERE job_id = ${application[0].job_id}
+    `
+
+    const company = await sql`
+        SELECT * FROM companies WHERE company_id = ${job[0].company_id}
+    `
+  
+    const users = await sql`
+        SELECT * FROM users WHERE user_id = ${application[0].applicant_id}
+    `
+
+    if(job.length === 0) {
+        throw new ErrorHandler("Associated job not found.", 404)
+    }
+  
+    if(job[0].posted_by_recruiter_id !== user.user_id) {
+        throw new ErrorHandler("You are not authorised to update this application.", 403)
+    }
+  
+    const updatedApplication = await sql`
+        UPDATE applications
+        SET status = ${req.body.status}
+        WHERE application_id = ${applicationId}
+        RETURNING *
+    `
+    const message = {
+      to: application[0].applicant_email,
+      subject: `Update on your application - NextHire`,
+      html: jobStatusTemplate(
+        users[0].name,
+        job[0].title,
+        company[0].name,
+        job[0].location,
+        application[0].applied_at.toDateString(),
+        job[0].role,
+        process.env.FRONTEND_URL || "http://localhost:3000",
+      ),
+    };
+  
+    publishToTopic("send-mail", message).catch((err) => {
+      console.log("Failed to publish email message to topic:", err);
+    });
+
+    res.status(200).json({
+        status: "success",
+        message: "Application status updated successfully.",
+        data: {
+          application: updatedApplication[0],
+          job: job[0],
+          company: company[0],
         }
     })
 })
