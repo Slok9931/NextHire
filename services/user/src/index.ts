@@ -1,8 +1,11 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import userRoutes from './routes/user.js'
+import { connectKafka } from './producer.js'
 
 dotenv.config()
+
+connectKafka()
 
 const app = express()
 

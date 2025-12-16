@@ -4,6 +4,8 @@ import getBuffer from "../utils/buffer.js";
 import { sql } from "../utils/db.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import { tryCatch } from "../utils/tryCatch.js";
+import { submitApplicationTemplate } from "../utils/template.js"
+import { publishToTopic } from "../producer.js"
 
 export const myProfile = tryCatch(
   async (req: AuthenticatedRequest, res, next) => {
@@ -321,7 +323,7 @@ export const applyForJob = tryCatch(
       throw new ErrorHandler("Job ID is required", 400);
     }
 
-    const job = await sql`SELECT is_active FROM jobs WHERE job_id = ${jobId}`;
+    const job = await sql`SELECT * FROM jobs WHERE job_id = ${jobId}`;
 
     if (job.length === 0) {
       throw new ErrorHandler("Job not found", 404);
@@ -330,6 +332,8 @@ export const applyForJob = tryCatch(
     if (!job[0].is_active) {
       throw new ErrorHandler("Cannot apply to an inactive job", 400);
     }
+
+    const company = await sql`SELECT * FROM companies WHERE company_id = ${job[0].company_id}`;
 
     const now = Date.now();
 
@@ -341,13 +345,31 @@ export const applyForJob = tryCatch(
 
     try {
       newApplication =
-        await sql`INSERT INTO applications (job_id, applicant_id, applicant_email, resume, subscribed) VALUES (${jobId}, ${user.user_id}, ${user.email}, ${resume}, ${isSubscribed}) RETURNING application_id`;
+        await sql`INSERT INTO applications (job_id, applicant_id, applicant_email, resume, subscribed) VALUES (${jobId}, ${user.user_id}, ${user.email}, ${resume}, ${isSubscribed}) RETURNING *`;
     } catch (error:any) {
       if (error.code === "23505") { // unique_violation
         throw new ErrorHandler("You have already applied for this job", 409);
       }
       throw error;
     }
+
+    const message = {
+      to: user.email,
+      subject: "Job Application Confirmation",
+      html: submitApplicationTemplate(
+        user.name,
+        job[0].title,
+        company[0].name,
+        job[0].location,
+        newApplication[0].applied_at.toDateString(),
+        job[0].role,
+        process.env.FRONTEND_URL || "http://localhost:3000"
+      ),
+    };
+
+    publishToTopic("send-mail", message).catch((err) => {
+      console.log("Error publishing to Kafka topic:", err);
+    });
 
     res.status(200).json({
       success: true,
