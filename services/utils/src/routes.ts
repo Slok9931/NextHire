@@ -33,10 +33,6 @@ router.post("/career", async (req, res) => {
       return res.status(400).json({ message: "Skills are required" });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: "Gemini API key not configured" });
-    }
-
     const prompt = `
 Based on the following skills: ${skills}.
 Please act as a career advisor and generate a career path suggestion.
@@ -109,6 +105,112 @@ Mastery', 'DevOps & Cloud').",
       error: error instanceof Error ? error.message : "Unknown error",
     });
   }
+});
+
+router.post("/resume-analyser", async (req, res) => {
+    try {
+        const { pdfBase64 } = req.body;
+
+        if (!pdfBase64) {
+            return res.status(400).json({ message: "PDF data is required" });
+        }
+
+        const prompt = `
+You are an expert ATS (Applicant Tracking System) analyzer. Analyze the following resume
+and provide:
+1. An ATS compatibility score (0-100)
+2. Detailed suggestions to improve the resume for better ATS performance
+Your entire response must be in valid JSON format. Do not include any text or markdown
+formatting outside of the JSON structure.
+The JSON object should have the following structure:
+
+{
+"atsScore": 85,
+"scoreBreakdown": {
+"formatting": {
+"score": 90,
+"feedback": "Brief feedback on formatting"
+},
+"keywords": {
+"score": 80,
+"feedback": "Brief feedback on keyword usage"
+},
+"structure": {
+"score": 85,
+"feedback": "Brief feedback on resume structure"
+},
+"readability": {
+"score": 88,
+"feedback": "Brief feedback on readability"
+}
+},
+"suggestions": [
+{
+"category": "Category name (e.g., 'Formatting', 'Content', 'Keywords',
+'Structure')",
+"issue": "Description of the issue found",
+"recommendation": "Specific actionable recommendation to fix it",
+"priority": "high/medium/low"
+}
+],
+"strengths": [
+"List of things the resume does well for ATS"
+],
+"summary": "A brief 2-3 sentence summary of the overall ATS performance"
+}
+Focus on:
+- File format and structure compatibility
+- Proper use of standard section headings
+- Keyword optimization
+- Formatting issues (tables, columns, graphics, special characters)
+- Contact information placement
+- Date formatting
+- Use of action verbs and quantifiable achievements
+- Section organization and flow
+`;
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        const result = await model.generateContent([
+            prompt,
+            {
+                inlineData: {
+                    mimeType: "application/pdf",
+                    data: pdfBase64.replace(/^data:application\/pdf;base64,/, ""),
+                }
+            }
+        ]);
+        const response = result.response;
+        const text = response.text();
+
+        if (!text) {
+            return res.status(500).json({ message: "Failed to analyze resume" });
+        }
+
+        let jsonRes;
+        try {
+            const cleanText = text
+                .replace(/```json/g, "")
+                .replace(/```/g, "")
+                .trim();
+            jsonRes = JSON.parse(cleanText);
+        } catch (parseError) {
+            return res.status(500).json({
+                message: "Failed to parse AI response",
+                error:
+                    parseError instanceof Error
+                        ? parseError.message
+                        : "Unknown parse error",
+            });
+        }
+
+        res.json(jsonRes);
+
+    } catch (error) {
+        res.status(500).json({
+            message: "Internal Server Error",
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
+    }
 });
 
 export default router;
