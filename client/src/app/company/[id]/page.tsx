@@ -117,6 +117,10 @@ const CompanyPage = () => {
         setShowJobForm(true)
     }
 
+    const handleJobCardClick = (job: Job) => {
+        router.push(`/jobs/${job.job_id}`)
+    }
+
     const isOwner = user && company && Number(user.user_id) === company.recruiter_id
 
     const formatSalary = (salary: number) => {
@@ -282,16 +286,14 @@ const CompanyPage = () => {
                                     {(isOwner ? jobs : activeJobs).map((job: Job) => (
                                         <Card 
                                             key={job.job_id}
-                                            className="border-[#d0d0ff] dark:border-[#0000c5] hover:shadow-lg transition-all duration-300 hover:border-[#494bd6] group"
+                                            className="border-[#d0d0ff] dark:border-[#0000c5] hover:shadow-lg transition-all duration-300 hover:border-[#494bd6] group cursor-pointer"
+                                            onClick={() => handleJobCardClick(job)}
                                         >
                                             <CardContent className="p-6">
                                                 <div className="space-y-4">
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex-1">
-                                                            <h3 
-                                                                className="font-semibold text-lg mb-2 group-hover:text-[#494bd6] transition-colors cursor-pointer"
-                                                                onClick={() => !isOwner && router.push(`/job/${job.job_id}`)}
-                                                            >
+                                                            <h3 className="font-semibold text-lg mb-2 group-hover:text-[#494bd6] transition-colors">
                                                                 {job.title}
                                                             </h3>
                                                             <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-3">
@@ -303,7 +305,10 @@ const CompanyPage = () => {
                                                                 <Button
                                                                     variant="ghost"
                                                                     size="sm"
-                                                                    onClick={() => handleEditJob(job)}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                        handleEditJob(job)
+                                                                    }}
                                                                     className="text-[#494bd6] hover:text-[#2b2ed6] hover:bg-[#ededff] cursor-pointer"
                                                                 >
                                                                     <Edit size={16} />
@@ -366,9 +371,14 @@ const CompanyPage = () => {
                                                                     )}
                                                                     <Switch
                                                                         checked={job.is_active}
-                                                                        onCheckedChange={() => handleToggleJobStatus(job.job_id, job.is_active)}
+                                                                        onCheckedChange={(checked) => {
+                                                                            // Prevent event bubbling to card click
+                                                                            event?.stopPropagation()
+                                                                            handleToggleJobStatus(job.job_id, job.is_active)
+                                                                        }}
                                                                         disabled={togglingJobId === job.job_id}
                                                                         className="data-[state=checked]:bg-[#494bd6] cursor-pointer"
+                                                                        onClick={(e) => e.stopPropagation()}
                                                                     />
                                                                     <span className="text-xs text-gray-500">
                                                                         {job.is_active ? 'Active' : 'Inactive'}

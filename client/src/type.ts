@@ -110,6 +110,18 @@ export interface Application {
     job_location?: string;
 }
 
+export interface JobApplication {
+    application_id: number;
+    job_id: number;
+    applicant_id: number;
+    applicant_name: string;
+    applicant_email: string;
+    resume: string;
+    subscribed: boolean;
+    applied_at: string;
+    status?: string;
+}
+
 export interface AppContextType {
     user: User | null;
     loading: boolean;
@@ -178,6 +190,7 @@ export interface AppContextType {
     getMyApplications: () => Promise<Application[]>;
     checkJobApplication: (jobId: number) => Promise<boolean>;
     refreshUser: () => Promise<void>;
+    getAllApplicationsForJob: (jobId: number) => Promise<JobApplication[]>;
 }
 
 export interface AppProviderProps {

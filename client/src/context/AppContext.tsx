@@ -439,6 +439,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
+    async function getAllApplicationsForJob(jobId: number) {
+        try {
+            const { data } = await axios.get(`${job_service}/api/job/applications/${jobId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            return data.data?.applications || [];
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to fetch applications';
+            console.error('Error fetching job applications:', error);
+            throw new Error(message);
+        }
+    }
+
     useEffect(() => {
         fetchUser(token as string);
     }, []);
@@ -473,6 +486,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         applyForJob,
         getMyApplications,
         checkJobApplication,
+        getAllApplicationsForJob,
         refreshUser: () => fetchUser(token as string)
     };
 
