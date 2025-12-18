@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { 
     Search, 
     Briefcase, 
@@ -11,27 +12,57 @@ import {
     ChevronRight, 
     Loader2,
     Filter,
-    X
+    X,
+    CheckCircle,
+    Clock,
+    FileText
 } from 'lucide-react'
 import { useAppData } from '@/context/AppContext'
-import { Job } from '@/type'
+import { Job, Application } from '@/type'
 import FilterPanel from './components/FilterPanel'
 import JobCard from './components/JobCard'
 import Loading from '@/components/loading'
 
 const Jobs = () => {
-    const { getAllJobs } = useAppData()
+    const { getAllJobs, getMyApplications, isAuth, user } = useAppData()
     
     const [jobs, setJobs] = useState<Job[]>([])
     const [loading, setLoading] = useState(true)
+    const [applicationsLoading, setApplicationsLoading] = useState(false)
     const [pagination, setPagination] = useState<any>({})
     const [filters, setFilters] = useState<any>({ is_active: true, page: 1, limit: 12 })
     const [showMobileFilters, setShowMobileFilters] = useState(false)
     const [quickSearch, setQuickSearch] = useState('')
+    const [myApplications, setMyApplications] = useState<Application[]>([])
+    const [applicationFilter, setApplicationFilter] = useState<'all' | 'applied' | 'not_applied'>('all')
 
     useEffect(() => {
         fetchJobs()
-    }, [])
+        if (isAuth && user?.role === 'jobseeker') {
+            fetchMyApplications()
+        }
+    }, [isAuth, user])
+
+    useEffect(() => {
+        // Refetch jobs when application filter changes
+        if (applicationFilter !== 'all') {
+            applyApplicationFilter()
+        } else {
+            fetchJobs()
+        }
+    }, [applicationFilter])
+
+    const fetchMyApplications = async () => {
+        try {
+            setApplicationsLoading(true)
+            const applications = await getMyApplications()
+            setMyApplications(applications)
+        } catch (error) {
+            console.error('Error fetching applications:', error)
+        } finally {
+            setApplicationsLoading(false)
+        }
+    }
 
     const fetchJobs = async (newFilters = filters) => {
         try {
@@ -46,22 +77,85 @@ const Jobs = () => {
         }
     }
 
+    const applyApplicationFilter = async () => {
+        if (!isAuth || user?.role !== 'jobseeker' || applicationFilter === 'all') {
+            return
+        }
+
+        try {
+            setLoading(true)
+            // Fetch all jobs first
+            const { jobs: allJobs, pagination: paginationData } = await getAllJobs({ 
+                ...filters, 
+                page: 1, 
+                limit: 1000 // Get more jobs for filtering
+            })
+            
+            const appliedJobIds = new Set(myApplications.map(app => app.job_id))
+            
+            let filteredJobs: Job[] = []
+            if (applicationFilter === 'applied') {
+                filteredJobs = allJobs.filter(job => appliedJobIds.has(job.job_id))
+            } else if (applicationFilter === 'not_applied') {
+                filteredJobs = allJobs.filter(job => !appliedJobIds.has(job.job_id))
+            }
+
+            // Apply pagination to filtered results
+            const startIndex = (filters.page - 1) * filters.limit
+            const endIndex = startIndex + filters.limit
+            const paginatedJobs = filteredJobs.slice(startIndex, endIndex)
+            
+            const totalPages = Math.ceil(filteredJobs.length / filters.limit)
+            
+            setJobs(paginatedJobs)
+            setPagination({
+                ...paginationData,
+                total_jobs: filteredJobs.length,
+                total_pages: totalPages,
+                current_page: filters.page,
+                has_prev_page: filters.page > 1,
+                has_next_page: filters.page < totalPages
+            })
+        } catch (error) {
+            console.error('Error applying application filter:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     const handleFiltersChange = (newFilters: any) => {
         const updatedFilters = { ...newFilters, limit: 12 }
         setFilters(updatedFilters)
-        fetchJobs(updatedFilters)
+        
+        if (applicationFilter === 'all') {
+            fetchJobs(updatedFilters)
+        } else {
+            // If application filter is active, we need to reapply it
+            setApplicationFilter('all') // Reset to trigger useEffect
+            setTimeout(() => {
+                setFilters(updatedFilters)
+                fetchJobs(updatedFilters)
+            }, 100)
+        }
     }
 
     const handlePageChange = (page: number) => {
         const newFilters = { ...filters, page }
         setFilters(newFilters)
-        fetchJobs(newFilters)
+        
+        if (applicationFilter === 'all') {
+            fetchJobs(newFilters)
+        } else {
+            applyApplicationFilter()
+        }
+        
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
     const handleQuickSearch = () => {
         const newFilters = { ...filters, search: quickSearch, page: 1 }
         setFilters(newFilters)
+        setApplicationFilter('all') // Reset application filter when searching
         fetchJobs(newFilters)
     }
 
@@ -78,6 +172,23 @@ const Jobs = () => {
         fetchJobs(newFilters)
     }
 
+    const getApplicationStats = () => {
+        if (!isAuth || user?.role !== 'jobseeker') return null
+        
+        const totalApplications = myApplications.length
+        return {
+            total: totalApplications,
+            applied: totalApplications,
+            pending: myApplications.filter(app => !app.subscribed).length
+        }
+    }
+
+    const isJobApplied = (jobId: number) => {
+        return myApplications.some(app => app.job_id === jobId)
+    }
+
+    const applicationStats = getApplicationStats()
+
     if (loading && jobs.length === 0) return <Loading />
 
     return (
@@ -91,9 +202,19 @@ const Jobs = () => {
                                 <Briefcase className="text-[#494bd6]" size={32} />
                                 Find Your Dream Job
                             </h1>
-                            <p className="text-gray-600 dark:text-gray-300 mt-1">
-                                Discover {pagination.total_jobs || 0} amazing opportunities waiting for you
-                            </p>
+                            <div className="flex items-center gap-4 mt-1">
+                                <p className="text-gray-600 dark:text-gray-300">
+                                    Discover {pagination.total_jobs || 0} amazing opportunities waiting for you
+                                </p>
+                                {applicationStats && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <Badge variant="secondary" className="gap-1">
+                                            <CheckCircle size={12} />
+                                            {applicationStats.applied} Applied
+                                        </Badge>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         
                         {/* Quick Search */}
@@ -141,28 +262,96 @@ const Jobs = () => {
 
                     {/* Jobs Content */}
                     <main className="flex-1">
-                        {/* Results Header */}
-                        <div className="mb-6">
+                        {/* Results Header with Application Filter */}
+                        <div className="mb-6 space-y-4">
                             <Card className="border-[#b0b0ff] dark:border-[#0000c5] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
                                 <CardContent className="p-4">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                        <div>
-                                            <h2 className="text-lg font-semibold">
-                                                {loading ? 'Searching...' : `${pagination.total_jobs || 0} Jobs Found`}
-                                            </h2>
-                                            {pagination.total_jobs > 0 && (
-                                                <p className="text-sm text-gray-500">
-                                                    Showing {((pagination.current_page - 1) * pagination.jobs_per_page) + 1} to{' '}
-                                                    {Math.min(pagination.current_page * pagination.jobs_per_page, pagination.total_jobs)} of{' '}
-                                                    {pagination.total_jobs} jobs
-                                                </p>
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                            <div>
+                                                <h2 className="text-lg font-semibold flex items-center gap-2">
+                                                    {loading ? (
+                                                        <>
+                                                            <Loader2 className="animate-spin" size={16} />
+                                                            Searching...
+                                                        </>
+                                                    ) : (
+                                                        `${pagination.total_jobs || 0} Jobs Found`
+                                                    )}
+                                                </h2>
+                                                {pagination.total_jobs > 0 && (
+                                                    <p className="text-sm text-gray-500">
+                                                        Showing {((pagination.current_page - 1) * pagination.jobs_per_page) + 1} to{' '}
+                                                        {Math.min(pagination.current_page * pagination.jobs_per_page, pagination.total_jobs)} of{' '}
+                                                        {pagination.total_jobs} jobs
+                                                    </p>
+                                                )}
+                                            </div>
+                                            
+                                            {/* Application Filter - Only for Job Seekers */}
+                                            {isAuth && user?.role === 'jobseeker' && (
+                                                <div className="flex items-center gap-2">
+                                                    {applicationsLoading && (
+                                                        <Clock className="animate-spin text-gray-400" size={16} />
+                                                    )}
+                                                    <Select 
+                                                        value={applicationFilter} 
+                                                        onValueChange={(value: 'all' | 'applied' | 'not_applied') => setApplicationFilter(value)}
+                                                    >
+                                                        <SelectTrigger className="w-48 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]">
+                                                            <SelectValue placeholder="Filter by application" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All Jobs</SelectItem>
+                                                            <SelectItem value="applied">
+                                                                <div className="flex items-center gap-2">
+                                                                    <CheckCircle size={14} className="text-green-600" />
+                                                                    Applied Jobs ({applicationStats?.applied || 0})
+                                                                </div>
+                                                            </SelectItem>
+                                                            <SelectItem value="not_applied">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Clock size={14} className="text-orange-600" />
+                                                                    Not Applied Yet
+                                                                </div>
+                                                            </SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
                                             )}
                                         </div>
-                                        {filters.search && (
-                                            <Badge variant="secondary" className="self-start sm:self-center">
-                                                Searching: "{filters.search}"
-                                            </Badge>
-                                        )}
+
+                                        {/* Active Filters Display */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {filters.search && (
+                                                <Badge variant="secondary" className="gap-1">
+                                                    <Search size={12} />
+                                                    Search: "{filters.search}"
+                                                    <button 
+                                                        onClick={clearQuickSearch}
+                                                        className="ml-1 hover:text-red-500"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </Badge>
+                                            )}
+                                            {applicationFilter !== 'all' && (
+                                                <Badge variant="secondary" className="gap-1">
+                                                    {applicationFilter === 'applied' ? (
+                                                        <CheckCircle size={12} className="text-green-600" />
+                                                    ) : (
+                                                        <Clock size={12} className="text-orange-600" />
+                                                    )}
+                                                    {applicationFilter === 'applied' ? 'Applied Jobs' : 'Not Applied'}
+                                                    <button 
+                                                        onClick={() => setApplicationFilter('all')}
+                                                        className="ml-1 hover:text-red-500"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
@@ -197,12 +386,29 @@ const Jobs = () => {
                             <Card className="border-[#b0b0ff] dark:border-[#0000c5] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
                                 <CardContent className="text-center py-12">
                                     <Briefcase className="mx-auto text-gray-400 mb-4" size={64} />
-                                    <h3 className="text-xl font-semibold mb-2">No Jobs Found</h3>
+                                    <h3 className="text-xl font-semibold mb-2">
+                                        {applicationFilter === 'applied' 
+                                            ? 'No Applied Jobs Found' 
+                                            : applicationFilter === 'not_applied'
+                                            ? 'All Jobs Applied!'
+                                            : 'No Jobs Found'
+                                        }
+                                    </h3>
                                     <p className="text-gray-500 mb-6">
-                                        We couldn't find any jobs matching your criteria. Try adjusting your filters or search terms.
+                                        {applicationFilter === 'applied' 
+                                            ? 'You haven\'t applied to any jobs yet. Start exploring and find your dream job!'
+                                            : applicationFilter === 'not_applied'
+                                            ? 'Congratulations! You\'ve applied to all available jobs matching your criteria.'
+                                            : 'We couldn\'t find any jobs matching your criteria. Try adjusting your filters or search terms.'
+                                        }
                                     </p>
-                                    <Button onClick={() => handleFiltersChange({ is_active: true, page: 1, limit: 12 })}>
-                                        Clear All Filters
+                                    <Button 
+                                        onClick={() => {
+                                            setApplicationFilter('all')
+                                            handleFiltersChange({ is_active: true, page: 1, limit: 12 })
+                                        }}
+                                    >
+                                        {applicationFilter !== 'all' ? 'View All Jobs' : 'Clear All Filters'}
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -210,7 +416,11 @@ const Jobs = () => {
                             <>
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                                     {jobs.map((job) => (
-                                        <JobCard key={job.job_id} job={job} />
+                                        <JobCard 
+                                            key={job.job_id} 
+                                            job={job}
+                                            hasApplied={isJobApplied(job.job_id)}
+                                        />
                                     ))}
                                 </div>
 

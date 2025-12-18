@@ -4,22 +4,24 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { 
-    MapPin, 
-    DollarSign, 
-    Users, 
-    Clock, 
-    Building2, 
+import {
+    MapPin,
+    DollarSign,
+    Users,
+    Clock,
+    Building2,
     ExternalLink,
-    Calendar
+    Calendar,
+    CheckCircle
 } from 'lucide-react'
 import { Job } from '@/type'
 
 interface JobCardProps {
     job: Job
+    hasApplied?: boolean
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job }) => {
+const JobCard: React.FC<JobCardProps> = ({ job, hasApplied = false }) => {
     const router = useRouter()
 
     const formatSalary = (salary: number) => {
@@ -58,20 +60,30 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
     }
 
     return (
-        <Card 
-            className="border-[#d0d0ff] dark:border-[#0000c5] hover:shadow-lg transition-all duration-300 hover:border-[#494bd6] cursor-pointer group bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm"
+        <Card
+            className={`border-[#d0d0ff] dark:border-[#0000c5] hover:shadow-lg transition-all duration-300 hover:border-[#494bd6] cursor-pointer group bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm relative ${hasApplied ? 'ring-2 ring-blue-200 dark:ring-blue-800' : ''
+                }`}
             onClick={handleViewJob}
         >
+            {hasApplied && (
+                <div className="absolute top-2 right-2 z-10">
+                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 shadow-md">
+                        <CheckCircle size={12} className="mr-1" />
+                        Applied
+                    </Badge>
+                </div>
+            )}
+
             <CardContent className="p-6">
                 <div className="space-y-4">
                     {/* Header with Company Info */}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                            {job.company_logo && (
+                            {job?.company?.logo && (
                                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0">
-                                    <img 
-                                        src={job.company_logo} 
-                                        alt={job.company_name}
+                                    <img
+                                        src={job.company.logo}
+                                        alt={job.company.name}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
@@ -80,13 +92,15 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
                                 <h3 className="font-semibold text-lg mb-1 group-hover:text-[#494bd6] transition-colors line-clamp-1">
                                     {job.title}
                                 </h3>
-                                <button
-                                    onClick={handleViewCompany}
-                                    className="text-[#494bd6] hover:text-[#2b2ed6] font-medium text-sm flex items-center gap-1 hover:underline"
-                                >
-                                    {job.company_name}
-                                    <ExternalLink size={12} />
-                                </button>
+                                {job?.company?.name && (
+                                    <button
+                                        onClick={handleViewCompany}
+                                        className="text-[#494bd6] hover:text-[#2b2ed6] font-medium text-sm flex items-center gap-1 hover:underline"
+                                    >
+                                        {job.company.name}
+                                        <ExternalLink size={12} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                         <div className="text-right shrink-0">
@@ -131,7 +145,7 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
                         </div>
                         <div className="flex items-center gap-2">
                             <Building2 size={14} />
-                            <span className="truncate">{job.company_name}</span>
+                            <span className="truncate">{job?.company?.name || 'Company'}</span>
                         </div>
                     </div>
 
@@ -141,15 +155,16 @@ const JobCard: React.FC<JobCardProps> = ({ job }) => {
                             <Calendar size={12} />
                             <span>Posted {new Date(job.created_at).toLocaleDateString()}</span>
                         </div>
-                        <Button 
-                            size="sm" 
+                        <Button
+                            size="sm"
                             className="cursor-pointer"
                             onClick={(e) => {
                                 e.stopPropagation()
                                 handleViewJob()
                             }}
+                            variant={hasApplied ? "outline" : "default"}
                         >
-                            View Details
+                            {hasApplied ? 'View Application' : 'View Details'}
                         </Button>
                     </div>
                 </div>
