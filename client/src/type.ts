@@ -89,14 +89,25 @@ export interface Job {
     qualifications: string;
     job_type: 'full_time' | 'part_time' | 'contract' | 'internship';
     work_location: 'onsite' | 'remote' | 'hybrid';
-    company_id: number;
     posted_by_recruiter_id: number;
     openings: number;
     is_active: boolean;
     created_at: string;
-    company_name?: string;
-    company_logo?: string;
-    company_website?: string;
+    company: Company;
+    company_id: number;
+}
+
+export interface Application {
+    application_id: number;
+    job_id: number;
+    applicant_id: number;
+    applicant_email: string;
+    resume: string;
+    subscribed: boolean;
+    applied_at: string;
+    job_title?: string;
+    job_salary?: number;
+    job_location?: string;
 }
 
 export interface AppContextType {
@@ -163,6 +174,9 @@ export interface AppContextType {
     }) => Promise<{ jobs: Job[]; pagination: any }>;
     getAllCompanies: () => Promise<Company[]>;
     getAllRoles: () => Promise<string[]>;
+    applyForJob: (jobId: number) => Promise<{ success: boolean; data: any }>;
+    getMyApplications: () => Promise<Application[]>;
+    checkJobApplication: (jobId: number) => Promise<boolean>;
     refreshUser: () => Promise<void>;
 }
 

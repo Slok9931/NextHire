@@ -398,6 +398,47 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
+    async function applyForJob(jobId: number) {
+        try {
+            setBtnLoading(true);
+            const { data } = await axios.post(`${user_service}/api/user/apply/${jobId}`, {}, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            toast.success('Application submitted successfully!');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to apply for job';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function getMyApplications() {
+        try {
+            const { data } = await axios.get(`${user_service}/api/user/applications/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            return data.data || [];
+        } catch (error) {
+            console.error('Error fetching applications:', error);
+            return [];
+        }
+    }
+
+    async function checkJobApplication(jobId: number): Promise<boolean> {
+        try {
+            if (!isAuth || !token) return false;
+            
+            const applications = await getMyApplications();
+            return applications.some((app: any) => app.job_id === jobId);
+        } catch (error) {
+            console.error('Error checking job application:', error);
+            return false;
+        }
+    }
+
     useEffect(() => {
         fetchUser(token as string);
     }, []);
@@ -429,6 +470,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getAllJobs,
         getAllCompanies,
         getAllRoles,
+        applyForJob,
+        getMyApplications,
+        checkJobApplication,
         refreshUser: () => fetchUser(token as string)
     };
 

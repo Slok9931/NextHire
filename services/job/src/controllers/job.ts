@@ -473,6 +473,18 @@ export const getJobDetails = tryCatch(async (req: AuthenticatedRequest, res) => 
         FROM jobs j
         WHERE j.job_id = ${jobId}
     `
+  
+    const company = await sql`
+        SELECT c.*
+        FROM companies c
+        WHERE c.company_id = ${job[0]?.company_id}
+    `
+
+    if(company.length === 0) {
+        throw new ErrorHandler("Associated company not found.", 404)
+    }
+
+    job[0].company = company[0]
 
     if(job.length === 0) {
         throw new ErrorHandler("Job not found.", 404)
