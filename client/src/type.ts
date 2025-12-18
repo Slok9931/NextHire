@@ -147,6 +147,22 @@ export interface AppContextType {
     }) => Promise<{ success: boolean; data: any }>;
     toggleJobStatus: (jobId: number, isActive: boolean) => Promise<{ success: boolean }>;
     getJobDetails: (jobId: number) => Promise<Job | null>;
+    getAllJobs: (filters?: {
+        search?: string;
+        role?: string;
+        min_salary?: number;
+        max_salary?: number;
+        job_type?: string;
+        work_location?: string;
+        min_openings?: number;
+        max_openings?: number;
+        is_active?: boolean;
+        company_id?: number;
+        page?: number;
+        limit?: number;
+    }) => Promise<{ jobs: Job[]; pagination: any }>;
+    getAllCompanies: () => Promise<Company[]>;
+    getAllRoles: () => Promise<string[]>;
     refreshUser: () => Promise<void>;
 }
 

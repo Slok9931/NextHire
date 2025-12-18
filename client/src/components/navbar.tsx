@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { ModeToggle } from './modeToggle'
 import { useAppData } from '@/context/AppContext'
+import { redirect } from 'next/navigation'
 
 const Navbar = () => {
 
@@ -20,6 +21,7 @@ const Navbar = () => {
 
     const logoutHandler = async () => {
         await logoutUser();
+        redirect('/');
     }
 
   return (

@@ -344,6 +344,60 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
+    async function getAllJobs(filters: {
+        search?: string;
+        role?: string;
+        min_salary?: number;
+        max_salary?: number;
+        job_type?: string;
+        work_location?: string;
+        min_openings?: number;
+        max_openings?: number;
+        is_active?: boolean;
+        company_id?: number;
+        page?: number;
+        limit?: number;
+    } = {}) {
+        try {
+            const params = new URLSearchParams();
+            
+            Object.entries(filters).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && value !== '') {
+                    params.append(key, value.toString());
+                }
+            });
+
+            const { data } = await axios.get(`${job_service}/api/job?${params.toString()}`);
+            return {
+                jobs: data.data?.jobs || [],
+                pagination: data.data?.pagination || {}
+            };
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+            return { jobs: [], pagination: {} };
+        }
+    }
+
+    async function getAllCompanies(): Promise<Company[]> {
+        try {
+            const { data } = await axios.get(`${job_service}/api/job/company`);
+            return data.data?.companies || [];
+        } catch (error) {
+            console.error('Error fetching companies:', error);
+            return [];
+        }
+    }
+
+    async function getAllRoles(): Promise<string[]> {
+        try {
+            const { data } = await axios.get(`${job_service}/api/job/role`);
+            return data.data?.roles || [];
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+            return [];
+        }
+    }
+
     useEffect(() => {
         fetchUser(token as string);
     }, []);
@@ -372,6 +426,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         updateJob,
         toggleJobStatus,
         getJobDetails,
+        getAllJobs,
+        getAllCompanies,
+        getAllRoles,
         refreshUser: () => fetchUser(token as string)
     };
 
