@@ -3,20 +3,20 @@ import Loading from '@/components/loading'
 import { useAppData } from '@/context/AppContext'
 import React, { useState, useEffect } from 'react'
 import { redirect } from 'next/navigation'
-import PageHeader from './(components)/PageHeader'
-import ProfileCard from './(components)/ProfileCard'
-import QuickStats from './(components)/QuickStats'
-import ProfileInformation from './(components)/ProfileInformation'
-import SkillsCard from './(components)/SkillsCard'
-import SubscriptionCard from './(components)/SubscriptionCard'
-import FileUploadDialog from './(components)/FileUploadDialog'
+import PageHeader from './components/PageHeader'
+import ProfileCard from './components/ProfileCard'
+import QuickStats from './components/QuickStats'
+import ProfileInformation from './components/ProfileInformation'
+import SkillsCard from './components/SkillsCard'
+import SubscriptionCard from './components/SubscriptionCard'
+import FileUploadDialog from './components/FileUploadDialog'
 import toast from 'react-hot-toast'
 
 const Account = () => {
-    const { 
-        isAuth, 
-        user, 
-        loading, 
+    const {
+        isAuth,
+        user,
+        loading,
         btnLoading,
         updateUserProfile,
         updateProfilePicture,
@@ -25,7 +25,7 @@ const Account = () => {
         removeSkillFromUser,
         searchSkills,
     } = useAppData()
-    
+
     const [editMode, setEditMode] = useState(false)
     const [profileData, setProfileData] = useState({
         name: '',

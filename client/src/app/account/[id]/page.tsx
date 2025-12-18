@@ -9,12 +9,12 @@ import Loading from '@/components/loading'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
-import PageHeader from '../(components)/PageHeader'
-import ProfileCard from '../(components)/ProfileCard'
-import QuickStats from '../(components)/QuickStats'
-import ProfileInformation from '../(components)/ProfileInformation'
-import SkillsCard from '../(components)/SkillsCard'
-import ContactCard from '../(components)/ContactCard'
+import PageHeader from '../components/PageHeader'
+import ProfileCard from '../components/ProfileCard'
+import QuickStats from '../components/QuickStats'
+import ProfileInformation from '../components/ProfileInformation'
+import SkillsCard from '../components/SkillsCard'
+import ContactCard from '../components/ContactCard'
 
 const UseAccount = () => {
     const [user, setUser] = useState<User | null>(null)
@@ -22,7 +22,7 @@ const UseAccount = () => {
     const [error, setError] = useState<string>('')
     const { id } = useParams()
 
-    async function fetchUser() { 
+    async function fetchUser() {
         try {
             const { data } = await axios.get(`${user_service}/api/user/${id}`, {
                 headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
@@ -63,7 +63,7 @@ const UseAccount = () => {
     return (
         <div className="min-h-screen py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <PageHeader 
+                <PageHeader
                     title={`${user.name}'s Profile`}
                     subtitle={`${user.role} Profile`}
                     badgeText="User Profile"
