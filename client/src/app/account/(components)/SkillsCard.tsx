@@ -20,6 +20,7 @@ interface SkillsCardProps {
     newSkill?: string
     searchResults?: Skill[]
     isOwner?: boolean
+    refreshTrigger?: number
     onNewSkillChange?: (value: string) => void
     onAddSkill?: (skillName: string, skillId?: number) => void
     onRemoveSkill?: (skillName: string) => void
@@ -28,6 +29,7 @@ interface SkillsCardProps {
 const SkillsCard = ({
     user,
     isOwner = false,
+    refreshTrigger = 0,
     onNewSkillChange,
     onAddSkill,
     onRemoveSkill
@@ -39,26 +41,34 @@ const SkillsCard = ({
     const [loading, setLoading] = useState(false)
     const [skillOperationLoading, setSkillOperationLoading] = useState(false)
 
-    useEffect(() => {
-        const fetchAllSkills = async () => {
-            try {
-                setLoading(true)
-                const { data } = await axios.get(`${user_service}/api/user/skill/search`)
-                setAllSkills(data.data || [])
-                setFilteredSkills(data.data || [])
-            } catch (error) {
-                console.error('Error fetching skills:', error)
-                setAllSkills([])
-                setFilteredSkills([])
-            } finally {
-                setLoading(false)
-            }
+    const fetchAllSkills = async () => {
+        try {
+            setLoading(true)
+            const { data } = await axios.get(`${user_service}/api/user/skill/search`)
+            setAllSkills(data.data || [])
+            setFilteredSkills(data.data || [])
+        } catch (error) {
+            console.error('Error fetching skills:', error)
+            setAllSkills([])
+            setFilteredSkills([])
+        } finally {
+            setLoading(false)
         }
+    }
 
+    // Initial fetch
+    useEffect(() => {
         if (isOwner) {
             fetchAllSkills()
         }
     }, [isOwner])
+
+    // Refetch when refreshTrigger changes (when new skill is added)
+    useEffect(() => {
+        if (isOwner && refreshTrigger > 0) {
+            fetchAllSkills()
+        }
+    }, [refreshTrigger, isOwner])
 
     useEffect(() => {
         if (!skillInput.trim()) {
@@ -137,7 +147,9 @@ const SkillsCard = ({
         skill.name.toLowerCase() === skillInput.toLowerCase()
     )
 
-    const isSkillAlreadyAdded = user?.skills?.includes(skillInput.trim())
+    const isSkillAlreadyAdded = user?.skills?.some(userSkill =>
+        userSkill.toLowerCase() === skillInput.trim().toLowerCase()
+    )
 
     return (
         <Card className="shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md relative">
@@ -224,10 +236,12 @@ const SkillsCard = ({
                                                 {filteredSkills.length > 0 ? (
                                                     <>
                                                         <div className="px-3 py-2 text-xs font-medium text-gray-500 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
-                                                            Existing Skills
+                                                            Existing Skills ({filteredSkills.length})
                                                         </div>
                                                         {filteredSkills.slice(0, 8).map((skill) => {
-                                                            const isAlreadyAdded = user?.skills?.includes(skill.name)
+                                                            const isAlreadyAdded = user?.skills?.some(userSkill =>
+                                                                userSkill.toLowerCase() === skill.name.toLowerCase()
+                                                            )
                                                             return (
                                                                 <button
                                                                     key={skill.skill_id}
@@ -257,7 +271,7 @@ const SkillsCard = ({
                                                     </>
                                                 ) : skillInput.trim() ? (
                                                     <div className="px-3 py-2 text-sm text-gray-500">
-                                                        No existing skills found
+                                                        No existing skills found matching "{skillInput}"
                                                     </div>
                                                 ) : (
                                                     <div className="px-3 py-2 text-sm text-gray-500">

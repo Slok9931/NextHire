@@ -29,6 +29,7 @@ const Account = () => {
     const [isUpdating, setIsUpdating] = useState(false)
     const [uploading, setUploading] = useState({ profile: false, resume: false })
     const [dialogs, setDialogs] = useState({ profile: false, resume: false })
+    const [skillsRefreshTrigger, setSkillsRefreshTrigger] = useState(0)
 
     if (loading) return <Loading />
     if (!isAuth) return redirect('/login')
@@ -96,7 +97,6 @@ const Account = () => {
         searchSkills(value)
     }
 
-    // Make addSkill async and return a promise
     const addSkill = async (skillName: string, skillId?: number): Promise<void> => {
         try {
             await axios.post(`${user_service}/api/user/skill/add`, {
@@ -112,6 +112,7 @@ const Account = () => {
             setUser(data.data)
             setNewSkill('')
             setSearchResults([])
+            setSkillsRefreshTrigger(prev => prev + 1)
             toast.success('Skill added successfully')
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to add skill')
@@ -186,6 +187,7 @@ const Account = () => {
                                 onNewSkillChange={handleNewSkillChange}
                                 onAddSkill={addSkill}
                                 onRemoveSkill={removeSkill}
+                                refreshTrigger={skillsRefreshTrigger}
                             />
                         )}
                     </div>
