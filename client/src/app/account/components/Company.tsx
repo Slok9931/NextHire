@@ -286,8 +286,7 @@ const Company = () => {
                                                 <h3 className="font-semibold text-lg truncate">{company.name}</h3>
                                                 <div className="flex items-center gap-2">
                                                     <a
-                                                        href={company.website}
-                                                        target="_blank"
+                                                        href={`http://localhost:3000/company/${company.company_id}`}
                                                         rel="noopener noreferrer"
                                                         className="text-[#494bd6] hover:text-[#2b2ed6] cursor-pointer"
                                                     >

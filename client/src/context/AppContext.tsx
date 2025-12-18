@@ -1,6 +1,6 @@
 "use client"
 
-import { AppContextType, AppProviderProps, User } from "@/type"
+import { AppContextType, AppProviderProps, User, Company, Job } from "@/type"
 import React, { createContext, useContext, useEffect, useState } from "react"
 import toast, { Toaster } from "react-hot-toast"
 import Cookies from "js-cookie"
@@ -233,9 +233,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
-    async function getCompanyDetails(companyId: number) {
+    async function getCompanyDetails(companyId: number): Promise<Company | null> {
         try {
-            const { data } = await axios.get(`${job_service}/api/job/company/${companyId}`, {
+            const { data } = await axios.get(`${job_service}/api/job/company/${companyId}`,{
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             return data.data?.company || null;
