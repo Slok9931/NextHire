@@ -36,13 +36,13 @@ const Navbar = () => {
 
                   <div className="hidden md:flex items-center space-x-1">
                       <Link href='/'>
-                        <Button variant='ghost' className='flex items-center gap-2 font-medium'><Home size={16} /> Home</Button>
+                        <Button variant='ghost' className='flex items-center gap-2 font-medium cursor-pointer'><Home size={16} /> Home</Button>
                       </Link>
                       <Link href='/jobs'>
-                          <Button variant='ghost' className='flex items-center gap-2 font-medium'><Briefcase size={16} /> Jobs</Button>
+                          <Button variant='ghost' className='flex items-center gap-2 font-medium cursor-pointer'><Briefcase size={16} /> Jobs</Button>
                       </Link>
                       <Link href='/about'>
-                          <Button variant='ghost' className='flex items-center gap-2 font-medium'><Info size={16} /> About</Button>
+                          <Button variant='ghost' className='flex items-center gap-2 font-medium cursor-pointer'><Info size={16} /> About</Button>
                       </Link>
                   </div>
 
@@ -63,15 +63,15 @@ const Navbar = () => {
                                       <p className="text-xs opacity-60 truncate">nexthire@support.com</p>
                                   </div>
                                   <Link href='/account'>
-                                      <Button className='w-full justify-start gap-2' variant={'ghost'}><User size={16} />My Profile</Button>
+                                      <Button className='w-full justify-start gap-2 cursor-pointer' variant={'ghost'}><User size={16} />My Profile</Button>
                                   </Link>
-                                  <Button onClick={logoutHandler} className='w-full justify-start gap-2 mt-1' variant={'destructive'}><LogOut size={16} /> Logout
+                                  <Button onClick={logoutHandler} className='w-full justify-start gap-2 cursor-pointer mt-1' variant={'destructive'}><LogOut size={16} /> Logout
                                   </Button>
                               </PopoverContent>
                           </Popover>
                       ) : (
                           <Link href='/login'>
-                              <Button className='gap-2'><User size={16} /> Sign In</Button>
+                              <Button className='gap-2 cursor-pointer'><User size={16} /> Sign In</Button>
                           </Link>
                       )}
                       <ModeToggle />

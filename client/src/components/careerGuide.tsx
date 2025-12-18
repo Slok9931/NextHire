@@ -1,6 +1,6 @@
 "use client"
 
-import { utils_service, type CareerGuide } from '@/type'
+import { type CareerGuide } from '@/type'
 import axios from 'axios'
 import { ArrowRight, BookOpen, Briefcase, Lightbulb, Loader2, Sparkles, Target, TrendingUp, X } from 'lucide-react'
 import React, { useState } from 'react'
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Input } from './ui/input'
+import { utils_service } from '@/context/AppContext'
 
 const CareerGuide = () => {
 

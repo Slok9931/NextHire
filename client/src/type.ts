@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from "react"
+
 export interface JobOptions {
     title: string
     responsibilities: string
@@ -49,4 +51,31 @@ export interface ResumeAnalysisResponse {
     summary: string
 }
 
-export const utils_service = "http://localhost:5001"
+export interface User {
+    user_id: string;
+    name: string;
+    email: string;
+    phone_number: string;
+    bio: string | null;
+    resume: string | null;
+    resume_public_id: string | null;
+    profile_pic: string | null;
+    profile_pic_public_id: string | null;
+    skills: string[];
+    subscription: string | null;
+    role: "jobseeker" | "recruiter";
+}
+
+export interface AppContextType {
+  user: User | null;
+  loading: boolean;
+  btnLoading: boolean;
+  isAuth: boolean;
+  setUser: Dispatch<SetStateAction<User | null>>;
+  setLoading: Dispatch<SetStateAction<boolean>>;
+  setIsAuth: Dispatch<SetStateAction<boolean>>;
+}
+
+export interface AppProviderProps {
+    children: React.ReactNode;
+}
