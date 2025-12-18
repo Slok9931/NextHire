@@ -452,6 +452,26 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
+    async function updateApplicationStatus(applicationId: number, status: string) {
+        try {
+            setBtnLoading(true);
+            const { data } = await axios.put(`${job_service}/api/job/application/${applicationId}`, 
+                { status }, 
+                {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                }
+            );
+            toast.success('Application status updated successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to update application status';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
     useEffect(() => {
         fetchUser(token as string);
     }, []);
@@ -487,6 +507,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getMyApplications,
         checkJobApplication,
         getAllApplicationsForJob,
+        updateApplicationStatus,
         refreshUser: () => fetchUser(token as string)
     };
 

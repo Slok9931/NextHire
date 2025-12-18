@@ -119,7 +119,7 @@ export interface JobApplication {
     resume: string;
     subscribed: boolean;
     applied_at: string;
-    status?: string;
+    status: string;
 }
 
 export interface AppContextType {
@@ -191,6 +191,7 @@ export interface AppContextType {
     checkJobApplication: (jobId: number) => Promise<boolean>;
     refreshUser: () => Promise<void>;
     getAllApplicationsForJob: (jobId: number) => Promise<JobApplication[]>;
+    updateApplicationStatus: (applicationId: number, status: string) => Promise<{ success: boolean }>;
 }
 
 export interface AppProviderProps {
