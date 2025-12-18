@@ -9,6 +9,7 @@ import { Button } from './ui/button'
 import { Label } from './ui/label'
 import { Input } from './ui/input'
 import { utils_service } from '@/context/AppContext'
+import toast from 'react-hot-toast'
 
 const CareerGuide = () => {
 
@@ -37,7 +38,7 @@ const CareerGuide = () => {
 
     const careerGuidance = async () => {
         if (skills.length === 0) {
-            alert("Please add at least one skill.")
+            toast.error("Please add at least one skill.")
             return
         }
         setLoading(true)
@@ -45,9 +46,9 @@ const CareerGuide = () => {
         try {
             const { data } = await axios.post(`${utils_service}/api/utils/career`, { skills: skills })
             setResponse(data)
-            alert("Career guidance generated successfully!")
+            toast.success("Career guidance generated successfully!")
         } catch (error: any) {
-            alert(error.response?.data?.message || "An error occurred while fetching career guidance.")
+            toast.error(error.response?.data?.message || "An error occurred while fetching career guidance.")
         } finally {
             setLoading(false)
         }
@@ -77,7 +78,7 @@ const CareerGuide = () => {
                 </p>
                 <Dialog open={open} onOpenChange={setOpen}>
                     <DialogTrigger asChild>
-                        <Button size={'lg'} className='px-8 h-12 gap-2'>
+                        <Button size={'lg'} className='px-8 h-12 gap-2 cursor-pointer'>
                             <Sparkles size={18} /> Get Career Guidance <ArrowRight size={18} />
                         </Button>
                     </DialogTrigger>
@@ -95,7 +96,7 @@ const CareerGuide = () => {
                                         <Label htmlFor='skill'>Add Skills</Label>
                                         <div className="flex gap-2">
                                             <Input id='skill' value={currentSkill} onKeyPress={handleKeyPress} onChange={(e) => setCurrentSkill(e.target.value)} placeholder='e.g. JavaScript, Python...' className='h-11' />
-                                            <Button onClick={() => addSkill()} className='gap-2 h-11'>Add</Button>
+                                            <Button onClick={() => addSkill()} className='gap-2 h-11 cursor-pointer'>Add</Button>
                                         </div>
                                     </div>
                                     {
@@ -105,7 +106,7 @@ const CareerGuide = () => {
                                                 {skills.map((skill, index) => (
                                                     <div key={index} className="inline-flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full bg-[#dcdcf3] dark:bg-[#010092]/30 border border-[#b0b0ff] dark:border-[#0000c5]">
                                                         <span className='text-sm font-medium'>{skill}</span>
-                                                        <button onClick={() => removeSkill(skill)} className='items-center h-5 w-5 rounded-full bg-destructive text-white flex justify-center'><X size={12} /></button>
+                                                        <button onClick={() => removeSkill(skill)} className='items-center h-5 w-5 rounded-full bg-destructive text-white flex justify-center cursor-pointer'><X size={12} /></button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -189,7 +190,7 @@ const CareerGuide = () => {
                                                 ))}
                                             </ul>
                                         </div>
-                                            <Button variant={'outline'} className='w-full' onClick={resetDialog}>Start New Analysis</Button>
+                                            <Button variant={'outline'} className='w-full cursor-pointer' onClick={resetDialog}>Start New Analysis</Button>
                                     </div>
                                 </>)
                         }
