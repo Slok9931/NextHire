@@ -71,10 +71,30 @@ export interface AppContextType {
   loading: boolean;
   btnLoading: boolean;
   isAuth: boolean;
-  setUser: Dispatch<SetStateAction<User | null>>;
-  setLoading: Dispatch<SetStateAction<boolean>>;
-  setIsAuth: Dispatch<SetStateAction<boolean>>;
+  setUser: (user: User | null) => void;
+  setLoading: (loading: boolean) => void;
+  setIsAuth: (isAuth: boolean) => void;
+  setBtnLoading: (loading: boolean) => void;
   logoutUser: () => Promise<void>;
+  updateUserProfile: (profileData: {
+    name?: string;
+    phone_number?: string;
+    bio?: string;
+  }) => Promise<{ success: boolean; data: User }>;
+  updateProfilePicture: (
+    file: File
+  ) => Promise<{ success: boolean; data: User }>;
+  updateResume: (file: File) => Promise<{ success: boolean; data: User }>;
+  addSkillToUser: (
+    skillName: string,
+    skillId?: number
+  ) => Promise<{ success: boolean; data: User }>;
+  removeSkillFromUser: (
+    skillName: string
+  ) => Promise<{ success: boolean; data: User }>;
+  searchSkills: (query: string) => Promise<any[]>;
+  getAllSkills: () => Promise<any[]>;
+  refreshUser: () => Promise<void>;
 }
 
 export interface AppProviderProps {

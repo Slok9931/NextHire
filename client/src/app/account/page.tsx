@@ -1,10 +1,7 @@
 "use client"
 import Loading from '@/components/loading'
-import { useAppData, user_service } from '@/context/AppContext'
-import React, { useState } from 'react'
-import axios from 'axios'
-import Cookies from 'js-cookie'
-import toast from 'react-hot-toast'
+import { useAppData } from '@/context/AppContext'
+import React, { useState, useEffect } from 'react'
 import { redirect } from 'next/navigation'
 import PageHeader from './(components)/PageHeader'
 import ProfileCard from './(components)/ProfileCard'
@@ -13,133 +10,111 @@ import ProfileInformation from './(components)/ProfileInformation'
 import SkillsCard from './(components)/SkillsCard'
 import SubscriptionCard from './(components)/SubscriptionCard'
 import FileUploadDialog from './(components)/FileUploadDialog'
+import toast from 'react-hot-toast'
 
 const Account = () => {
-    const { isAuth, user, loading, setUser } = useAppData()
+    const { 
+        isAuth, 
+        user, 
+        loading, 
+        btnLoading,
+        updateUserProfile,
+        updateProfilePicture,
+        updateResume,
+        addSkillToUser,
+        removeSkillFromUser,
+        searchSkills,
+    } = useAppData()
+    
     const [editMode, setEditMode] = useState(false)
     const [profileData, setProfileData] = useState({
-        name: user?.name || '',
-        phone_number: user?.phone_number || '',
-        bio: user?.bio || ''
+        name: '',
+        phone_number: '',
+        bio: ''
     })
     const [profilePic, setProfilePic] = useState<File | null>(null)
-    const [resume, setResume] = useState<File | null>(null)
+    const [resume, setResumeFile] = useState<File | null>(null)
     const [newSkill, setNewSkill] = useState('')
     const [searchResults, setSearchResults] = useState<any[]>([])
-    const [isUpdating, setIsUpdating] = useState(false)
-    const [uploading, setUploading] = useState({ profile: false, resume: false })
     const [dialogs, setDialogs] = useState({ profile: false, resume: false })
     const [skillsRefreshTrigger, setSkillsRefreshTrigger] = useState(0)
 
+    useEffect(() => {
+        if (user) {
+            setProfileData({
+                name: user.name || '',
+                phone_number: user.phone_number || '',
+                bio: user.bio || ''
+            })
+        }
+    }, [user])
+
+    useEffect(() => {
+        if (!loading && !isAuth) {
+            redirect('/login')
+        }
+    }, [loading, isAuth])
+
     if (loading) return <Loading />
-    if (!isAuth) return redirect('/login')
+    if (!isAuth) return null
+    if (!user) return <Loading />
 
     const handleInputChange = (field: string, value: string) => {
         setProfileData(prev => ({ ...prev, [field]: value }))
     }
 
-    const updateProfile = async () => {
-        setIsUpdating(true)
+    const handleUpdateProfile = async () => {
         try {
-            const { data } = await axios.put(`${user_service}/api/user/update-profile`, profileData, {
-                headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
-            })
-            setUser(data.data)
-            toast.success('Profile updated successfully')
+            await updateUserProfile(profileData)
             setEditMode(false)
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to update profile')
-        } finally {
-            setIsUpdating(false)
+        } catch (error) {
+            console.error('Error updating profile:', error)
         }
     }
 
     const handleFileUpload = async (file: File, type: 'profile' | 'resume') => {
-        const formData = new FormData()
-        formData.append('file', file)
-        setUploading(prev => ({ ...prev, [type]: true }))
-
         try {
-            const endpoint = type === 'profile' ? 'update-profile-picture' : 'update-resume'
-            const { data } = await axios.put(`${user_service}/api/user/${endpoint}`, formData, {
-                headers: {
-                    'Authorization': `Bearer ${Cookies.get('token')}`,
-                    'Content-Type': 'multipart/form-data'
-                }
-            })
-            setUser(data.data)
-            toast.success(`${type === 'profile' ? 'Profile picture' : 'Resume'} updated successfully`)
-            if (type === 'profile') setProfilePic(null)
-            if (type === 'resume') setResume(null)
+            if (type === 'profile') {
+                await updateProfilePicture(file)
+                setProfilePic(null)
+            } else {
+                await updateResume(file)
+                setResumeFile(null)
+            }
             setDialogs(prev => ({ ...prev, [type]: false }))
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || `Failed to update ${type}`)
-        } finally {
-            setUploading(prev => ({ ...prev, [type]: false }))
-        }
-    }
-
-    const searchSkills = async (query: string) => {
-        if (query.length < 2) {
-            setSearchResults([])
-            return
-        }
-        try {
-            const { data } = await axios.get(`${user_service}/api/user/skill/search?query=${query}`)
-            setSearchResults(data.data)
         } catch (error) {
-            console.error('Error searching skills:', error)
+            console.error(`Error uploading ${type}:`, error)
         }
     }
 
-    const handleNewSkillChange = (value: string) => {
-        setNewSkill(value)
-        searchSkills(value)
+    const handleSearchSkills = async (query: string) => {
+        setNewSkill(query)
+        if (query.length >= 2) {
+            const results = await searchSkills(query)
+            setSearchResults(results)
+        } else {
+            setSearchResults([])
+        }
     }
 
-    const addSkill = async (skillName: string, skillId?: number): Promise<void> => {
+    const handleAddSkill = async (skillName: string, skillId?: number): Promise<void> => {
         try {
-            await axios.post(`${user_service}/api/user/skill/add`, {
-                skillName: skillId ? undefined : skillName,
-                skillId
-            }, {
-                headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
-            })
-
-            const { data } = await axios.get(`${user_service}/api/user/me`, {
-                headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
-            })
-            setUser(data.data)
+            await addSkillToUser(skillName, skillId)
             setNewSkill('')
             setSearchResults([])
             setSkillsRefreshTrigger(prev => prev + 1)
-            toast.success('Skill added successfully')
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to add skill')
-            throw error // Re-throw to let the SkillsCard handle the loading state
+        } catch (error) {
+            throw error
         }
     }
 
-    // Make removeSkill async and return a promise
-    const removeSkill = async (skillName: string): Promise<void> => {
+    const handleRemoveSkill = async (skillName: string): Promise<void> => {
         try {
-            await axios.delete(`${user_service}/api/user/skill/remove`, {
-                data: { skillName },
-                headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
-            })
-
-            const { data } = await axios.get(`${user_service}/api/user/me`, {
-                headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
-            })
-            setUser(data.data)
-            toast.success('Skill removed successfully')
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Failed to remove skill')
-            throw error // Re-throw to let the SkillsCard handle the loading state
+            await removeSkillFromUser(skillName)
+        } catch (error) {
+            throw error
         }
     }
-
-    if (!user) return <Loading />
 
     return (
         <div className="min-h-screen py-8">
@@ -159,10 +134,9 @@ const Account = () => {
                             onUpdateResume={() => setDialogs(prev => ({ ...prev, resume: true }))}
                         />
                         <QuickStats user={user} />
-
                         <SubscriptionCard
                             user={user}
-                            onUpgrade={() => toast.success('Premium upgrade coming soon!')}
+                            onUpgrade={() => alert('Premium upgrade coming soon!')}
                         />
                     </div>
 
@@ -171,10 +145,10 @@ const Account = () => {
                             user={user}
                             editMode={editMode}
                             profileData={profileData}
-                            isUpdating={isUpdating}
+                            isUpdating={btnLoading}
                             isOwner={true}
                             onEdit={() => setEditMode(true)}
-                            onSave={updateProfile}
+                            onSave={handleUpdateProfile}
                             onInputChange={handleInputChange}
                         />
 
@@ -184,9 +158,9 @@ const Account = () => {
                                 newSkill={newSkill}
                                 searchResults={searchResults}
                                 isOwner={true}
-                                onNewSkillChange={handleNewSkillChange}
-                                onAddSkill={addSkill}
-                                onRemoveSkill={removeSkill}
+                                onNewSkillChange={handleSearchSkills}
+                                onAddSkill={handleAddSkill}
+                                onRemoveSkill={handleRemoveSkill}
                                 refreshTrigger={skillsRefreshTrigger}
                             />
                         )}
@@ -198,7 +172,7 @@ const Account = () => {
                     onOpenChange={(open) => setDialogs(prev => ({ ...prev, profile: open }))}
                     type="profile"
                     file={profilePic}
-                    uploading={uploading.profile}
+                    uploading={btnLoading}
                     onFileSelect={(file) => {
                         if (file.size > 5 * 1024 * 1024) {
                             toast.error('File size should be less than 5MB')
@@ -214,7 +188,7 @@ const Account = () => {
                     onOpenChange={(open) => setDialogs(prev => ({ ...prev, resume: open }))}
                     type="resume"
                     file={resume}
-                    uploading={uploading.resume}
+                    uploading={btnLoading}
                     onFileSelect={(file) => {
                         if (file.type !== 'application/pdf') {
                             toast.error('Please upload a PDF file')
@@ -224,7 +198,7 @@ const Account = () => {
                             toast.error('File size should be less than 5MB')
                             return
                         }
-                        setResume(file)
+                        setResumeFile(file)
                     }}
                     onUpload={() => resume && handleFileUpload(resume, 'resume')}
                 />

@@ -15,13 +15,19 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
     const [btnLoading, setBtnLoading] = useState<boolean>(false);
     const [isAuth, setIsAuth] = useState<boolean>(false);
 
     const token = Cookies.get("token");
 
     async function fetchUser(token: string) {
+        if (!token) {
+            setLoading(false);
+            setIsAuth(false);
+            return;
+        }
+        
         setLoading(true);
         try {
             const { data } = await axios.get(`${user_service}/api/user/me`, {
@@ -32,6 +38,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             setUser(data.data);
             setIsAuth(true);
         } catch (error) {
+            console.error('Error fetching user:', error);
             setUser(null);
             setIsAuth(false);
         } finally {
@@ -46,6 +53,142 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         toast.success("Logged out successfully");
     }
 
+    async function updateUserProfile(profileData: { name?: string; phone_number?: string; bio?: string }) {
+        try {
+            setBtnLoading(true);
+            const { data } = await axios.put(`${user_service}/api/user/update-profile`, profileData, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setUser(data.data);
+            toast.success('Profile updated successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to update profile';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function updateProfilePicture(file: File) {
+        try {
+            setBtnLoading(true);
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const { data } = await axios.put(`${user_service}/api/user/update-profile-picture`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            setUser(data.data);
+            toast.success('Profile picture updated successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to update profile picture';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function updateResume(file: File) {
+        try {
+            setBtnLoading(true);
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const { data } = await axios.put(`${user_service}/api/user/update-resume`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            setUser(data.data);
+            toast.success('Resume updated successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to update resume';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function addSkillToUser(skillName: string, skillId?: number) {
+        try {
+            setBtnLoading(true);
+            await axios.post(`${user_service}/api/user/skill/add`, {
+                skillName: skillId ? undefined : skillName,
+                skillId
+            }, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            // Refetch user data to get updated skills
+            const { data } = await axios.get(`${user_service}/api/user/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setUser(data.data);
+            toast.success('Skill added successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to add skill';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function removeSkillFromUser(skillName: string) {
+        try {
+            setBtnLoading(true);
+            await axios.delete(`${user_service}/api/user/skill/remove`, {
+                data: { skillName },
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            const { data } = await axios.get(`${user_service}/api/user/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setUser(data.data);
+            toast.success('Skill removed successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to remove skill';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function searchSkills(query: string) {
+        try {
+            if (query.length < 2) return [];
+            const { data } = await axios.get(`${user_service}/api/user/skill/search?query=${query}`);
+            return data.data || [];
+        } catch (error) {
+            console.error('Error searching skills:', error);
+            return [];
+        }
+    }
+
+    async function getAllSkills() {
+        try {
+            const { data } = await axios.get(`${user_service}/api/user/skill/search`);
+            return data.data || [];
+        } catch (error) {
+            console.error('Error fetching all skills:', error);
+            return [];
+        }
+    }
+
     useEffect(() => {
         fetchUser(token as string);
     }, []);
@@ -58,7 +201,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setUser,
         setLoading,
         setIsAuth,
-        logoutUser
+        setBtnLoading,
+        logoutUser,
+        updateUserProfile,
+        updateProfilePicture,
+        updateResume,
+        addSkillToUser,
+        removeSkillFromUser,
+        searchSkills,
+        getAllSkills,
+        refreshUser: () => fetchUser(token as string)
     };
 
     return (

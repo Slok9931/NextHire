@@ -174,20 +174,6 @@ export const searchSkills = tryCatch(async (req, res, next) => {
   });
 });
 
-export const getAllSkills = tryCatch(async (req, res, next) => {
-  const skills = await sql`
-      SELECT skill_id, name 
-      FROM skills 
-      ORDER BY name
-    `;
-
-  res.status(200).json({
-    success: true,
-    message: "All skills fetched successfully",
-    data: skills,
-  });
-});
-
 export const addSkillsToUser = tryCatch(
   async (req: AuthenticatedRequest, res, next) => {
     const userId = req.user?.user_id;
