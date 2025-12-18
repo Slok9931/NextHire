@@ -354,15 +354,15 @@ const Register = () => {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="role" className="text-sm font-medium">
-                                            Role
+                                            I want to
                                         </Label>
                                         <Select value={role} onValueChange={setRole} required>
                                             <SelectTrigger className="h-11 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6] focus:ring-[#494bd6]" style={{ height: '2.75rem', width: '100%' }}>
                                                 <SelectValue placeholder="Select your role" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="jobseeker">Job Seeker</SelectItem>
-                                                <SelectItem value="recruiter">Recruiter</SelectItem>
+                                                <SelectItem value="jobseeker">Find a Job</SelectItem>
+                                                <SelectItem value="recruiter">Hire a Talent</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>
