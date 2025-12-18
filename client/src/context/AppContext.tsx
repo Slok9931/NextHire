@@ -245,6 +245,105 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
+    async function createJob(jobData: {
+        title: string;
+        description: string;
+        salary: number;
+        location: string;
+        role: string;
+        responsibilities: string;
+        qualifications: string;
+        job_type: string;
+        work_location: string;
+        company_id: number;
+        openings: number;
+    }) {
+        try {
+            setBtnLoading(true);
+            const { data } = await axios.post(`${job_service}/api/job/new`, jobData, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            toast.success('Job created successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to create job';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function updateJob(jobId: number, jobData: {
+        title: string;
+        description: string;
+        salary: number;
+        location: string;
+        role: string;
+        responsibilities: string;
+        qualifications: string;
+        job_type: string;
+        work_location: string;
+        openings: number;
+        is_active: boolean;
+    }) {
+        try {
+            setBtnLoading(true);
+            const { data } = await axios.put(`${job_service}/api/job/${jobId}`, jobData, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            toast.success('Job updated successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to update job';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function toggleJobStatus(jobId: number, isActive: boolean) {
+        try {
+            const job = await getJobDetails(jobId);
+            if (!job) {
+                throw new Error('Job not found');
+            }
+
+            await updateJob(jobId, {
+                title: job.title,
+                description: job.description,
+                salary: job.salary,
+                location: job.location,
+                role: job.role,
+                responsibilities: job.responsibilities,
+                qualifications: job.qualifications,
+                job_type: job.job_type,
+                work_location: job.work_location,
+                openings: job.openings,
+                is_active: isActive
+            });
+
+            return { success: true };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to toggle job status';
+            toast.error(message);
+            throw new Error(message);
+        }
+    }
+
+    async function getJobDetails(jobId: number): Promise<Job | null> {
+        try {
+            const { data } = await axios.get(`${job_service}/api/job/${jobId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            return data.data?.job || null;
+        } catch (error) {
+            console.error('Error fetching job details:', error);
+            return null;
+        }
+    }
+
     useEffect(() => {
         fetchUser(token as string);
     }, []);
@@ -269,6 +368,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getRecruiterCompanies,
         deleteCompany,
         getCompanyDetails,
+        createJob,
+        updateJob,
+        toggleJobStatus,
+        getJobDetails,
         refreshUser: () => fetchUser(token as string)
     };
 

@@ -119,6 +119,34 @@ export interface AppContextType {
     getRecruiterCompanies: () => Promise<Company[]>;
     deleteCompany: (companyId: number) => Promise<{ success: boolean }>;
     getCompanyDetails: (companyId: number) => Promise<Company | null>;
+    createJob: (jobData: {
+        title: string;
+        description: string;
+        salary: number;
+        location: string;
+        role: string;
+        responsibilities: string;
+        qualifications: string;
+        job_type: string;
+        work_location: string;
+        company_id: number;
+        openings: number;
+    }) => Promise<{ success: boolean; data: any }>;
+    updateJob: (jobId: number, jobData: {
+        title: string;
+        description: string;
+        salary: number;
+        location: string;
+        role: string;
+        responsibilities: string;
+        qualifications: string;
+        job_type: string;
+        work_location: string;
+        openings: number;
+        is_active: boolean;
+    }) => Promise<{ success: boolean; data: any }>;
+    toggleJobStatus: (jobId: number, isActive: boolean) => Promise<{ success: boolean }>;
+    getJobDetails: (jobId: number) => Promise<Job | null>;
     refreshUser: () => Promise<void>;
 }
 
