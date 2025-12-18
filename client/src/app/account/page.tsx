@@ -96,7 +96,8 @@ const Account = () => {
         searchSkills(value)
     }
 
-    const addSkill = async (skillName: string, skillId?: number) => {
+    // Make addSkill async and return a promise
+    const addSkill = async (skillName: string, skillId?: number): Promise<void> => {
         try {
             await axios.post(`${user_service}/api/user/skill/add`, {
                 skillName: skillId ? undefined : skillName,
@@ -104,7 +105,7 @@ const Account = () => {
             }, {
                 headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
             })
-            
+
             const { data } = await axios.get(`${user_service}/api/user/me`, {
                 headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
             })
@@ -114,16 +115,18 @@ const Account = () => {
             toast.success('Skill added successfully')
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to add skill')
+            throw error // Re-throw to let the SkillsCard handle the loading state
         }
     }
 
-    const removeSkill = async (skillName: string) => {
+    // Make removeSkill async and return a promise
+    const removeSkill = async (skillName: string): Promise<void> => {
         try {
             await axios.delete(`${user_service}/api/user/skill/remove`, {
                 data: { skillName },
                 headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
             })
-            
+
             const { data } = await axios.get(`${user_service}/api/user/me`, {
                 headers: { 'Authorization': `Bearer ${Cookies.get('token')}` }
             })
@@ -131,6 +134,7 @@ const Account = () => {
             toast.success('Skill removed successfully')
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Failed to remove skill')
+            throw error // Re-throw to let the SkillsCard handle the loading state
         }
     }
 
@@ -139,7 +143,7 @@ const Account = () => {
     return (
         <div className="min-h-screen py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <PageHeader 
+                <PageHeader
                     title="Account Settings"
                     subtitle="Manage your profile information and preferences"
                     badgeText="My Account"
@@ -147,17 +151,22 @@ const Account = () => {
 
                 <div className="grid lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1 space-y-6">
-                        <ProfileCard 
+                        <ProfileCard
                             user={user}
                             isOwner={true}
                             onUpdateProfilePic={() => setDialogs(prev => ({ ...prev, profile: true }))}
                             onUpdateResume={() => setDialogs(prev => ({ ...prev, resume: true }))}
                         />
                         <QuickStats user={user} />
+
+                        <SubscriptionCard
+                            user={user}
+                            onUpgrade={() => toast.success('Premium upgrade coming soon!')}
+                        />
                     </div>
 
                     <div className="lg:col-span-2 space-y-6">
-                        <ProfileInformation 
+                        <ProfileInformation
                             user={user}
                             editMode={editMode}
                             profileData={profileData}
@@ -169,7 +178,7 @@ const Account = () => {
                         />
 
                         {user.role === 'jobseeker' && (
-                            <SkillsCard 
+                            <SkillsCard
                                 user={user}
                                 newSkill={newSkill}
                                 searchResults={searchResults}
@@ -179,15 +188,10 @@ const Account = () => {
                                 onRemoveSkill={removeSkill}
                             />
                         )}
-
-                        <SubscriptionCard 
-                            user={user}
-                            onUpgrade={() => toast.success('Premium upgrade coming soon!')}
-                        />
                     </div>
                 </div>
 
-                <FileUploadDialog 
+                <FileUploadDialog
                     open={dialogs.profile}
                     onOpenChange={(open) => setDialogs(prev => ({ ...prev, profile: open }))}
                     type="profile"
@@ -203,7 +207,7 @@ const Account = () => {
                     onUpload={() => profilePic && handleFileUpload(profilePic, 'profile')}
                 />
 
-                <FileUploadDialog 
+                <FileUploadDialog
                     open={dialogs.resume}
                     onOpenChange={(open) => setDialogs(prev => ({ ...prev, resume: open }))}
                     type="resume"

@@ -139,10 +139,15 @@ export const searchSkills = tryCatch(async (req, res, next) => {
   const { query } = req.query;
 
   if (!query || typeof query !== "string" || query.trim() === "") {
+    const skills = await sql`
+      SELECT skill_id, name 
+      FROM skills
+    `;
+
     return res.status(200).json({
       success: true,
-      message: "No search query provided",
-      data: [],
+      message: "All skills fetched successfully",
+      data: skills,
     });
   }
 
