@@ -1,8 +1,10 @@
 "use client"
 
 import { AppContextType, AppProviderProps, User } from "@/type"
-import React, { createContext, useContext, useState } from "react"
-import {Toaster} from "react-hot-toast"
+import React, { createContext, useContext, useEffect, useState } from "react"
+import { Toaster } from "react-hot-toast"
+import Cookies from "js-cookie"
+import axios from "axios"
 
 export const auth_service = "http://localhost:5000"
 export const utils_service = "http://localhost:5001"
@@ -17,6 +19,30 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [btnLoading, setBtnLoading] = useState<boolean>(false);
     const [isAuth, setIsAuth] = useState<boolean>(false);
 
+    const token = Cookies.get("token");
+
+    async function fetchUser(token: string) {
+        setLoading(true);
+        try {
+            const { data } = await axios.get(`${user_service}/api/user/me`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setUser(data.data);
+            setIsAuth(true);
+        } catch (error) {
+            setUser(null);
+            setIsAuth(false);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchUser(token as string);
+    }, []);
+
     const value = {
         user,
         loading,
@@ -30,7 +56,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     return (
         <AppContext.Provider value={value}>
             {children}
-            <Toaster position="bottom-left" reverseOrder={false} />
+            <Toaster position="top-center" reverseOrder={false} />
         </AppContext.Provider>
     )
 }

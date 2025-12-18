@@ -2,10 +2,11 @@
 import Link from 'next/link'
 import React, { useState } from 'react'
 import { Button } from './ui/button'
-import { Briefcase, Home, Info, LogOut, Menu, User, X } from 'lucide-react'
+import { Briefcase, Home, Info, LogOut, Menu, User, User2, X } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { ModeToggle } from './modeToggle'
+import { useAppData } from '@/context/AppContext'
 
 const Navbar = () => {
 
@@ -15,7 +16,7 @@ const Navbar = () => {
         setIsOpen(!isOpen);
     };
 
-    const isAuth = false;
+    const {isAuth, setIsAuth, user, setUser, loading} = useAppData();
 
     const logoutHandler = () => {
         // logout logic here
@@ -47,33 +48,35 @@ const Navbar = () => {
                   </div>
 
                   <div className="hidden md:flex items-center gap-3">
-                      {isAuth ? (
-                          <Popover>
-                              <PopoverTrigger asChild>
-                                  <button className='flex items-center gap-2 hover:opacity-80 transition-opacity'>
-                                      <Avatar className='h-9 w-9 ring-2 ring-offset-2 ring-offset-background ring-[#010092]/20 cursor-pointer hover:ring-[#010092]/40 transition-all'>
-                                          {/* <AvatarImage src={} alt='' /> */}
-                                          <AvatarFallback className='bg-[#dcdcf3] dark:bg-[#010092] text-[#494bd6]'>NH</AvatarFallback>
-                                      </Avatar>
-                                  </button>
-                              </PopoverTrigger>
-                              <PopoverContent className='w-56 p-2' align='end'>
-                                  <div className="px-3 py-2 mb-2 border-b">
-                                      <p className="text-sm font-semibold">NextHire</p>
-                                      <p className="text-xs opacity-60 truncate">nexthire@support.com</p>
-                                  </div>
-                                  <Link href='/account'>
-                                      <Button className='w-full justify-start gap-2 cursor-pointer' variant={'ghost'}><User size={16} />My Profile</Button>
-                                  </Link>
-                                  <Button onClick={logoutHandler} className='w-full justify-start gap-2 cursor-pointer mt-1' variant={'destructive'}><LogOut size={16} /> Logout
-                                  </Button>
-                              </PopoverContent>
-                          </Popover>
-                      ) : (
-                          <Link href='/login'>
-                              <Button className='gap-2 cursor-pointer'><User size={16} /> Sign In</Button>
-                          </Link>
-                      )}
+                      {loading ? null : <>
+                          {isAuth ? (
+                              <Popover>
+                                  <PopoverTrigger asChild>
+                                      <button className='flex items-center gap-2 hover:opacity-80 transition-opacity'>
+                                          <Avatar className='h-9 w-9 ring-2 ring-offset-2 ring-offset-background ring-[#010092]/20 cursor-pointer hover:ring-[#010092]/40 transition-all'>
+                                              <AvatarImage src={user ? user.profile_pic as string : ''} alt={user?.name} />
+                                              <AvatarFallback className='bg-[#dcdcf3] dark:bg-[#010092] text-[#494bd6]'>{user ? user.name.charAt(0) : <User2 />}</AvatarFallback>
+                                          </Avatar>
+                                      </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className='w-56 p-2' align='end'>
+                                      <div className="px-3 py-2 mb-2 border-b">
+                                          <p className="text-sm font-semibold">NextHire</p>
+                                          <p className="text-xs opacity-60 truncate">nexthire@support.com</p>
+                                      </div>
+                                      <Link href='/account'>
+                                          <Button className='w-full justify-start gap-2 cursor-pointer' variant={'ghost'}><User size={16} />My Profile</Button>
+                                      </Link>
+                                      <Button onClick={logoutHandler} className='w-full justify-start gap-2 cursor-pointer mt-1' variant={'destructive'}><LogOut size={16} /> Logout
+                                      </Button>
+                                  </PopoverContent>
+                              </Popover>
+                          ) : (
+                              <Link href='/login'>
+                                  <Button className='gap-2 cursor-pointer'><User size={16} /> Sign In</Button>
+                              </Link>
+                          )}
+                      </>}
                       <ModeToggle />
                   </div>
 

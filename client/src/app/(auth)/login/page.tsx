@@ -3,7 +3,7 @@ import { auth_service, useAppData } from '@/context/AppContext'
 import axios from 'axios'
 import { redirect } from 'next/navigation'
 import React, { FormEvent, useState } from 'react'
-import { toast } from 'react-hot-toast'
+import toast from "react-hot-toast"
 import Cookies from 'js-cookie'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
