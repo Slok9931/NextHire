@@ -46,7 +46,7 @@ const CareerGuide = () => {
         try {
             const { data } = await axios.post(`${utils_service}/api/utils/career`, { skills: skills })
             setResponse(data)
-            toast.success("Career guidance generated successfully!")
+            toast.success(data.message)
         } catch (error: any) {
             toast.error(error.response?.data?.message || "An error occurred while fetching career guidance.")
         } finally {

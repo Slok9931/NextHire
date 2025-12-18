@@ -68,7 +68,7 @@ const ResumeAnalyzer = () => {
                 }
             )
             setResponse(data)
-            toast.success("Resume analyzed successfully!");
+            toast.success(data.message);
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to analyze resume");
             console.log(error)
