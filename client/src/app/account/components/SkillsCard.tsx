@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Briefcase, Plus, X, Search, ChevronDown, Loader2 } from 'lucide-react'
+import { Plus, X, Search, ChevronDown, Loader2, Award } from 'lucide-react'
 import { User as UserType } from '@/type'
 import axios from 'axios'
 import { user_service } from '@/context/AppContext'
@@ -63,7 +63,6 @@ const SkillsCard = ({
         }
     }, [isOwner])
 
-    // Refetch when refreshTrigger changes (when new skill is added)
     useEffect(() => {
         if (isOwner && refreshTrigger > 0) {
             fetchAllSkills()
@@ -155,7 +154,7 @@ const SkillsCard = ({
         <Card className="shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md relative">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Briefcase className="text-[#494bd6]" size={20} />
+                    <Award className="text-[#494bd6]" size={20} />
                     {isOwner ? 'Skills' : 'Skills & Expertise'}
                 </CardTitle>
                 <CardDescription>
@@ -163,7 +162,6 @@ const SkillsCard = ({
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                {/* Skills Display with Loading Overlay */}
                 <div className="relative">
                     {skillOperationLoading && (
                         <div className="absolute inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-md">
@@ -195,7 +193,7 @@ const SkillsCard = ({
                             ))
                         ) : (
                             <p className="text-gray-500 text-sm">
-                                {isOwner ? 'No skills added yet' : 'No skills listed'}
+                                {isOwner ? 'No skills added yet. Start building your profile!' : 'No skills listed by this user.'}
                             </p>
                         )}
                     </div>

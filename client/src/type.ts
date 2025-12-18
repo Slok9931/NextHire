@@ -66,35 +66,60 @@ export interface User {
     role: "jobseeker" | "recruiter";
 }
 
+export interface Company {
+    company_id: number;
+    name: string;
+    description: string;
+    website: string;
+    logo: string;
+    logo_public_id?: string;
+    recruiter_id: number;
+    created_at: string;
+    jobs?: Job[];
+}
+
+export interface Job {
+    job_id: number;
+    title: string;
+    description: string;
+    location: string;
+    salary: number;
+    role: string;
+    responsibilities: string;
+    qualifications: string;
+    job_type: 'full_time' | 'part_time' | 'contract' | 'internship';
+    work_location: 'onsite' | 'remote' | 'hybrid';
+    company_id: number;
+    posted_by_recruiter_id: number;
+    openings: number;
+    is_active: boolean;
+    created_at: string;
+    company_name?: string;
+    company_logo?: string;
+    company_website?: string;
+}
+
 export interface AppContextType {
-  user: User | null;
-  loading: boolean;
-  btnLoading: boolean;
-  isAuth: boolean;
-  setUser: (user: User | null) => void;
-  setLoading: (loading: boolean) => void;
-  setIsAuth: (isAuth: boolean) => void;
-  setBtnLoading: (loading: boolean) => void;
-  logoutUser: () => Promise<void>;
-  updateUserProfile: (profileData: {
-    name?: string;
-    phone_number?: string;
-    bio?: string;
-  }) => Promise<{ success: boolean; data: User }>;
-  updateProfilePicture: (
-    file: File
-  ) => Promise<{ success: boolean; data: User }>;
-  updateResume: (file: File) => Promise<{ success: boolean; data: User }>;
-  addSkillToUser: (
-    skillName: string,
-    skillId?: number
-  ) => Promise<{ success: boolean; data: User }>;
-  removeSkillFromUser: (
-    skillName: string
-  ) => Promise<{ success: boolean; data: User }>;
-  searchSkills: (query: string) => Promise<any[]>;
-  getAllSkills: () => Promise<any[]>;
-  refreshUser: () => Promise<void>;
+    user: User | null;
+    loading: boolean;
+    btnLoading: boolean;
+    isAuth: boolean;
+    setUser: (user: User | null) => void;
+    setLoading: (loading: boolean) => void;
+    setIsAuth: (isAuth: boolean) => void;
+    setBtnLoading: (loading: boolean) => void;
+    logoutUser: () => Promise<void>;
+    updateUserProfile: (profileData: { name?: string; phone_number?: string; bio?: string }) => Promise<{ success: boolean; data: User }>;
+    updateProfilePicture: (file: File) => Promise<{ success: boolean; data: User }>;
+    updateResume: (file: File) => Promise<{ success: boolean; data: User }>;
+    addSkillToUser: (skillName: string, skillId?: number) => Promise<{ success: boolean; data: User }>;
+    removeSkillFromUser: (skillName: string) => Promise<{ success: boolean; data: User }>;
+    searchSkills: (query: string) => Promise<any[]>;
+    createCompany: (companyData: { name: string; description: string; website: string }, logo: File) => Promise<{ success: boolean; data: any }>;
+    getRecruiterCompanies: () => Promise<Company[]>;
+    deleteCompany: (companyId: number) => Promise<{ success: boolean }>;
+    getCompanyDetails: (companyId: number) => Promise<Company | null>;
+    refreshUser: () => Promise<void>;
 }
 
 export interface AppProviderProps {

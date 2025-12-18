@@ -89,7 +89,7 @@ const ProfileInformation = ({
                                 />
                             </div>
                         </div>
-                        <div className="space-y-2">
+                        {user.role === 'jobseeker' && <div className="space-y-2">
                             <Label htmlFor="bio">Bio</Label>
                             <Textarea
                                 id="bio"
@@ -99,11 +99,11 @@ const ProfileInformation = ({
                                 className="min-h-20 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]"
                                 placeholder="Tell us about yourself..."
                             />
-                        </div>
+                        </div>}
                     </>
                 ) : (
                     <div>
-                        {user?.bio ? (
+                        {user?.role === 'jobseeker' && user?.bio ? (
                             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                                 {user.bio}
                             </p>

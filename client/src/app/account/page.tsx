@@ -11,6 +11,7 @@ import SkillsCard from './components/SkillsCard'
 import SubscriptionCard from './components/SubscriptionCard'
 import FileUploadDialog from './components/FileUploadDialog'
 import toast from 'react-hot-toast'
+import Company from './components/Company'
 
 const Account = () => {
     const {
@@ -163,6 +164,10 @@ const Account = () => {
                                 onRemoveSkill={handleRemoveSkill}
                                 refreshTrigger={skillsRefreshTrigger}
                             />
+                        )}
+                        
+                        {user.role === 'recruiter' && (
+                            <Company />
                         )}
                     </div>
                 </div>

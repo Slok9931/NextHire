@@ -129,7 +129,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            // Refetch user data to get updated skills
             const { data } = await axios.get(`${user_service}/api/user/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -179,13 +178,70 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
-    async function getAllSkills() {
+    async function createCompany(companyData: { name: string; description: string; website: string }, logo: File) {
         try {
-            const { data } = await axios.get(`${user_service}/api/user/skill/search`);
-            return data.data || [];
+            setBtnLoading(true);
+            const formData = new FormData();
+            formData.append('name', companyData.name);
+            formData.append('description', companyData.description);
+            formData.append('website', companyData.website);
+            formData.append('file', logo);
+            
+            const { data } = await axios.post(`${job_service}/api/job/company/new`, formData, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            toast.success('Company created successfully');
+            return { success: true, data: data.data };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to create company';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function getRecruiterCompanies() {
+        try {
+            const { data } = await axios.get(`${job_service}/api/job/company/by-recruiter`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            return data.data?.companies || [];
         } catch (error) {
-            console.error('Error fetching all skills:', error);
+            console.error('Error fetching companies:', error);
             return [];
+        }
+    }
+
+    async function deleteCompany(companyId: number) {
+        try {
+            setBtnLoading(true);
+            await axios.delete(`${job_service}/api/job/company/${companyId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            toast.success('Company deleted successfully');
+            return { success: true };
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to delete company';
+            toast.error(message);
+            throw new Error(message);
+        } finally {
+            setBtnLoading(false);
+        }
+    }
+
+    async function getCompanyDetails(companyId: number) {
+        try {
+            const { data } = await axios.get(`${job_service}/api/job/company/${companyId}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            return data.data?.company || null;
+        } catch (error) {
+            console.error('Error fetching company details:', error);
+            return null;
         }
     }
 
@@ -209,7 +265,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addSkillToUser,
         removeSkillFromUser,
         searchSkills,
-        getAllSkills,
+        createCompany,
+        getRecruiterCompanies,
+        deleteCompany,
+        getCompanyDetails,
         refreshUser: () => fetchUser(token as string)
     };
 
