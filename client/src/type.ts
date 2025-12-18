@@ -74,6 +74,7 @@ export interface AppContextType {
   setUser: Dispatch<SetStateAction<User | null>>;
   setLoading: Dispatch<SetStateAction<boolean>>;
   setIsAuth: Dispatch<SetStateAction<boolean>>;
+  logoutUser: () => Promise<void>;
 }
 
 export interface AppProviderProps {
