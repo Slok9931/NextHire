@@ -16,7 +16,7 @@ const Navbar = () => {
         setIsOpen(!isOpen);
     };
 
-    const {isAuth, setIsAuth, user, setUser, loading, logoutUser} = useAppData();
+    const {isAuth, user, loading, logoutUser} = useAppData();
 
     const logoutHandler = async () => {
         await logoutUser();

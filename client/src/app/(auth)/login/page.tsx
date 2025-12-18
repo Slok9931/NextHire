@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Eye, EyeOff, Lock, Mail, User, Loader2, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import Loading from '@/components/loading'
 
 const Login = () => {
     const [email, setEmail] = useState("")
@@ -18,7 +19,9 @@ const Login = () => {
     const [btnLoading, setBtnLoading] = useState(false)
     const [showPassword, setShowPassword] = useState(false)
 
-    const { isAuth, setUser, loading, setIsAuth } = useAppData()
+    const { isAuth, setUser, setIsAuth, loading } = useAppData()
+
+    if(loading) return <Loading />
 
     if (isAuth) return redirect('/')
 
