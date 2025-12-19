@@ -5,45 +5,39 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-    Users, 
-    Calendar, 
-    Mail, 
-    FileText, 
-    Clock, 
-    CheckCircle, 
+import {
+    Users,
+    Calendar,
+    Mail,
+    FileText,
+    Clock,
+    CheckCircle,
     XCircle,
     Download,
     Eye,
     Filter,
     Search,
     Loader2,
-    ExternalLink,
-    MoreHorizontal
+    ExternalLink
 } from 'lucide-react'
 import { useAppData } from '@/context/AppContext'
 import { JobApplication } from '@/type'
 import { Input } from '@/components/ui/input'
 import { redirect } from 'next/navigation'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 interface ApplicationsTabProps {
     jobId: number
 }
 
 const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
-    const { getAllApplicationsForJob, updateApplicationStatus, btnLoading } = useAppData()
-    
+    const { getAllApplicationsForJob, updateApplicationStatus } = useAppData()
+
     const [applications, setApplications] = useState<JobApplication[]>([])
     const [loading, setLoading] = useState(true)
     const [filteredApplications, setFilteredApplications] = useState<JobApplication[]>([])
     const [statusFilter, setStatusFilter] = useState<'all' | 'applied' | 'rejected' | 'hired'>('all')
     const [searchQuery, setSearchQuery] = useState('')
+    const [updatingStatus, setUpdatingStatus] = useState<{ [key: number]: 'hired' | 'rejected' | null }>({})
 
     useEffect(() => {
         fetchApplications()
@@ -65,13 +59,16 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
         }
     }
 
-    const handleStatusUpdate = async (applicationId: number, newStatus: string) => {
+    const handleStatusUpdate = async (applicationId: number, newStatus: 'hired' | 'rejected') => {
         try {
+            setUpdatingStatus(prev => ({ ...prev, [applicationId]: newStatus }))
             await updateApplicationStatus(applicationId, newStatus)
             // Refresh applications after successful update
             await fetchApplications()
         } catch (error) {
             console.error('Error updating application status:', error)
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [applicationId]: null }))
         }
     }
 
@@ -86,7 +83,7 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
         // Apply search filter
         if (searchQuery.trim()) {
             const query = searchQuery.toLowerCase()
-            filtered = filtered.filter(app => 
+            filtered = filtered.filter(app =>
                 app.applicant_name.toLowerCase().includes(query) ||
                 app.applicant_email.toLowerCase().includes(query)
             )
@@ -130,7 +127,7 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
         const applied = applications.filter(app => app.status === 'applied').length
         const hired = applications.filter(app => app.status === 'hired').length
         const rejected = applications.filter(app => app.status === 'rejected').length
-        
+
         return { total, applied, hired, rejected }
     }
 
@@ -213,7 +210,7 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                 />
                             </div>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <Filter size={16} className="text-gray-500" />
                             <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
@@ -255,16 +252,16 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                 {applications.length === 0 ? 'No Applications Yet' : 'No Matching Applications'}
                             </h3>
                             <p className="text-gray-500">
-                                {applications.length === 0 
+                                {applications.length === 0
                                     ? 'Applications will appear here once candidates start applying to this job.'
                                     : 'Try adjusting your search or filter criteria.'
                                 }
-                                </p>
-                            </div>
+                            </p>
+                        </div>
                     ) : (
                         <div className="space-y-4">
                             {filteredApplications.map((application) => (
-                                <Card 
+                                <Card
                                     key={application.application_id}
                                     className="border-[#d0d0ff] dark:border-[#0000c5] hover:shadow-md transition-all duration-200"
                                 >
@@ -275,7 +272,7 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                     {getInitials(application.applicant_name)}
                                                 </AvatarFallback>
                                             </Avatar>
-                                            
+
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex-1 min-w-0">
@@ -285,7 +282,7 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                             </h3>
                                                             <ExternalLink size={14} className='hover:text-[#494bd6] cursor-pointer' onClick={() => redirect(`/account/${application.applicant_id}`)} />
                                                         </div>
-                                                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-2">
+                                                        <div className="flex flex-col justify-center md:flex-row md:items-center md:justify-start gap-4 text-sm text-gray-500 mb-2">
                                                             <div className="flex items-center gap-1">
                                                                 <Mail size={14} />
                                                                 <span className="truncate">{application.applicant_email}</span>
@@ -296,42 +293,12 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
+
                                                     <div className="flex items-center gap-2">
                                                         {getStatusBadge(application.status)}
-                                                        {application.status === 'applied' && (
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger asChild>
-                                                                    <Button 
-                                                                        variant="ghost" 
-                                                                        size="sm"
-                                                                        disabled={btnLoading}
-                                                                        className="h-8 w-8 p-0"
-                                                                    >
-                                                                        <MoreHorizontal size={16} />
-                                                                    </Button>
-                                                                </DropdownMenuTrigger>
-                                                                <DropdownMenuContent align="end">
-                                                                    <DropdownMenuItem 
-                                                                        onClick={() => handleStatusUpdate(application.application_id, 'hired')}
-                                                                        className="flex items-center gap-2 text-green-600"
-                                                                    >
-                                                                        <CheckCircle size={14} />
-                                                                        Hire Candidate
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem 
-                                                                        onClick={() => handleStatusUpdate(application.application_id, 'rejected')}
-                                                                        className="flex items-center gap-2 text-red-600"
-                                                                    >
-                                                                        <XCircle size={14} />
-                                                                        Reject Application
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        )}
                                                     </div>
                                                 </div>
-                                                
+
                                                 <div className="flex items-center gap-2 mt-4">
                                                     <Button
                                                         variant="outline"
@@ -342,20 +309,36 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                         <Eye size={14} />
                                                         View Resume
                                                     </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        className="gap-2"
-                                                        onClick={() => {
-                                                            const link = document.createElement('a')
-                                                            link.href = application.resume
-                                                            link.download = `${application.applicant_name}_resume.pdf`
-                                                            link.click()
-                                                        }}
-                                                    >
-                                                        <Download size={14} />
-                                                        Download
-                                                    </Button>
+
+                                                    {application.status === 'applied' && (
+                                                        <div className="flex gap-2 ml-auto">
+                                                            <Button
+                                                                size="sm"
+                                                                className="gap-2 bg-green-600 hover:bg-green-700 text-white cursor-pointer"
+                                                                onClick={() => handleStatusUpdate(application.application_id, 'hired')}
+                                                            >
+                                                                {updatingStatus[application.application_id] === 'hired' ? (
+                                                                    <Loader2 size={14} className="animate-spin" />
+                                                                ) : (
+                                                                    <CheckCircle size={14} />
+                                                                )}
+                                                                {updatingStatus[application.application_id] === 'hired' ? 'Hiring...' : 'Accept'}
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="destructive"
+                                                                className="gap-2 cursor-pointer"
+                                                                onClick={() => handleStatusUpdate(application.application_id, 'rejected')}
+                                                            >
+                                                                {updatingStatus[application.application_id] === 'rejected' ? (
+                                                                    <Loader2 size={14} className="animate-spin" />
+                                                                ) : (
+                                                                    <XCircle size={14} />
+                                                                )}
+                                                                {updatingStatus[application.application_id] === 'rejected' ? 'Rejecting...' : 'Reject'}
+                                                            </Button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
