@@ -2,7 +2,7 @@
 import React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Star, CheckCircle, AlertTriangle } from 'lucide-react'
+import { CheckCircle, AlertTriangle, Crown } from 'lucide-react'
 import { User as UserType } from '@/type'
 
 interface SubscriptionCardProps {
@@ -17,7 +17,7 @@ const SubscriptionCard = ({ user, onUpgrade }: SubscriptionCardProps) => {
         <Card className="shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <Star className="text-[#e7234a]" size={20} />
+                    <Crown className="text-[#e7234a]" size={20} />
                     Subscription Status
                 </CardTitle>
             </CardHeader>
