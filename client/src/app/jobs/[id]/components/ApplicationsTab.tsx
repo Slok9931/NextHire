@@ -453,7 +453,7 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
-                                                                className="gap-2"
+                                                                className="gap-2 cursor-pointer"
                                                                 onClick={() => window.open(application.resume, '_blank')}
                                                             >
                                                                 <Eye size={14} />

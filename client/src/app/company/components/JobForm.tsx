@@ -58,8 +58,6 @@ const JobForm: React.FC<JobFormProps> = ({
                 openings: job.openings?.toString() || '1',
                 is_active: job.is_active ?? true
             })
-        } else {
-            resetForm()
         }
     }, [job, isEdit, open])
 
@@ -123,7 +121,6 @@ const JobForm: React.FC<JobFormProps> = ({
 
         try {
             await onSubmit(jobData)
-            resetForm()
         } catch (error) {
             console.error('Error submitting job:', error)
         }
@@ -298,6 +295,7 @@ const JobForm: React.FC<JobFormProps> = ({
                         variant="outline"
                         onClick={() => handleDialogOpenChange(false)}
                         disabled={loading}
+                        className="cursor-pointer"
                     >
                         Cancel
                     </Button>

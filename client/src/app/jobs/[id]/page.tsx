@@ -176,7 +176,7 @@ const JobPage = () => {
                         <p className="text-gray-500 mb-6">
                             The job you're looking for might have been removed or doesn't exist.
                         </p>
-                        <Button onClick={() => router.push('/jobs')} className="gap-2">
+                        <Button onClick={() => router.push('/jobs')} className="gap-2 cursor-pointer">
                             <ArrowLeft size={16} />
                             Back to Jobs
                         </Button>
@@ -196,7 +196,7 @@ const JobPage = () => {
                     <Button
                         variant="ghost"
                         onClick={() => router.back()}
-                        className="gap-2 text-[#494bd6] hover:text-[#2b2ed6]"
+                        className="gap-2 text-[#494bd6] hover:text-[#2b2ed6] cursor-pointer"
                     >
                         <ArrowLeft size={16} />
                         Back
@@ -208,7 +208,7 @@ const JobPage = () => {
                     <Alert className="mb-6 border-green-200 bg-green-50 dark:bg-green-950">
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <AlertDescription className="text-green-800 dark:text-green-200">
-                            Application submitted successfully! You will receive a confirmation email shortly.
+                            Application submitted successfully! We have shared your profile with the recruiter.
                         </AlertDescription>
                     </Alert>
                 )}
@@ -221,7 +221,7 @@ const JobPage = () => {
                             You need to upload your resume before applying for jobs.{' '}
                             <Button
                                 variant="link"
-                                className="p-0 h-auto text-yellow-600 hover:text-yellow-800"
+                                className="p-0 h-auto text-yellow-600 hover:text-yellow-800 cursor-pointer"
                                 onClick={() => router.push('/profile')}
                             >
                                 Upload resume
@@ -252,7 +252,7 @@ const JobPage = () => {
                                     {job.company.name && (
                                         <button
                                             onClick={handleViewCompany}
-                                            className="text-[#494bd6] hover:text-[#2b2ed6] font-semibold text-lg flex items-center gap-2 hover:underline mb-4"
+                                            className="text-[#494bd6] hover:text-[#2b2ed6] font-semibold text-lg flex items-center gap-2 hover:underline mb-4 cursor-pointer"
                                         >
                                             <Building2 size={20} />
                                             {job.company.name}
@@ -389,7 +389,7 @@ const JobPage = () => {
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="text-white hover:bg-white/10"
+                                                        className="text-white hover:bg-white/10 cursor-pointer"
                                                         onClick={() => window.open(user.resume!, '_blank')}
                                                     >
                                                         <Eye className="mr-1 h-3 w-3" />
@@ -553,7 +553,7 @@ const JobPage = () => {
                                             </div>
                                             <Button
                                                 variant="outline"
-                                                className="w-full"
+                                                className="w-full cursor-pointer"
                                                 onClick={handleViewCompany}
                                             >
                                                 <Building2 className="mr-2 h-4 w-4" />
@@ -562,7 +562,7 @@ const JobPage = () => {
                                             {job.company.website && (
                                                 <Button
                                                     variant="ghost"
-                                                    className="w-full"
+                                                    className="w-full cursor-pointer"
                                                     onClick={() => window.open(job.company.website!, '_blank')}
                                                 >
                                                     <Globe className="mr-2 h-4 w-4" />
@@ -584,7 +584,7 @@ const JobPage = () => {
                                             </p>
                                             <Button
                                                 variant="outline"
-                                                className="w-full"
+                                                className="w-full cursor-pointer"
                                                 onClick={() => router.push(`/jobs?role=${encodeURIComponent(job.role)}`)}
                                             >
                                                 Browse Similar Jobs
@@ -611,6 +611,7 @@ const JobPage = () => {
                                                 <Button
                                                     variant="outline"
                                                     onClick={() => router.push('/jobs')}
+                                                    className="cursor-pointer"
                                                 >
                                                     Browse More Jobs
                                                 </Button>

@@ -354,6 +354,7 @@ const Company = () => {
                             variant="outline"
                             onClick={() => setShowDeleteDialog(false)}
                             disabled={btnLoading}
+                            className='cursor-pointer'
                         >
                             Cancel
                         </Button>

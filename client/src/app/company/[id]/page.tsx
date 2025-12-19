@@ -161,7 +161,7 @@ const CompanyPage = () => {
                         <p className="text-gray-500 mb-6">
                             The company you're looking for might have been removed or doesn't exist.
                         </p>
-                        <Button onClick={() => router.push('/jobs')} className="gap-2">
+                        <Button onClick={() => router.push('/jobs')} className="gap-2 cursor-pointer">
                             <ArrowLeft size={16} />
                             Back to Jobs
                         </Button>
@@ -185,7 +185,7 @@ const CompanyPage = () => {
                         <Button 
                             variant="ghost" 
                             onClick={() => router.back()}
-                            className="gap-2 text-[#494bd6] hover:text-[#2b2ed6]"
+                            className="gap-2 text-[#494bd6] hover:text-[#2b2ed6] cursor-pointer"
                         >
                             <ArrowLeft size={16} />
                             Back
@@ -275,7 +275,7 @@ const CompanyPage = () => {
                                         }
                                     </p>
                                     {isOwner && (
-                                        <Button onClick={handleAddJob} className="gap-2">
+                                        <Button onClick={handleAddJob} className="gap-2 cursor-pointer">
                                             <Plus size={16} />
                                             Create First Job
                                         </Button>

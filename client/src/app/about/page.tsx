@@ -45,7 +45,7 @@ const About = () => {
                         </p>
                         <div className="pt-4">
                             <Link href="/jobs">
-                                <Button size="lg" className="gap-2 h-12 px-8 text-base">
+                                <Button size="lg" className="gap-2 h-12 px-8 text-base cursor-pointer">
                                     Get Started
                                     <ArrowRight size={18} />
                                 </Button>

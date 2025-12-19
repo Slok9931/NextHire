@@ -246,7 +246,7 @@ const Jobs = () => {
                                 {quickSearch && (
                                     <button
                                         onClick={clearQuickSearch}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer" 
                                     >
                                         <X size={16} />
                                     </button>
@@ -258,7 +258,7 @@ const Jobs = () => {
                             <Button
                                 variant="outline"
                                 onClick={() => setShowMobileFilters(!showMobileFilters)}
-                                className="lg:hidden"
+                                className="lg:hidden cursor-pointer"
                             >
                                 <Filter size={16} />
                             </Button>
@@ -370,7 +370,7 @@ const Jobs = () => {
                                                     Search: "{filters.search}"
                                                     <button
                                                         onClick={clearQuickSearch}
-                                                        className="ml-1 hover:text-red-500"
+                                                        className="ml-1 hover:text-red-500 cursor-pointer"
                                                     >
                                                         <X size={12} />
                                                     </button>
@@ -386,7 +386,7 @@ const Jobs = () => {
                                                     {applicationFilter === 'applied' ? 'Applied Jobs' : 'Not Applied'}
                                                     <button
                                                         onClick={() => setApplicationFilter('all')}
-                                                        className="ml-1 hover:text-red-500"
+                                                        className="ml-1 hover:text-red-500 cursor-pointer"
                                                     >
                                                         <X size={12} />
                                                     </button>
@@ -398,7 +398,7 @@ const Jobs = () => {
                                                     My Posted Jobs
                                                     <button
                                                         onClick={() => setRecruiterFilter('all')}
-                                                        className="ml-1 hover:text-red-500"
+                                                        className="ml-1 hover:text-red-500 cursor-pointer"
                                                     >
                                                         <X size={12} />
                                                     </button>
@@ -464,7 +464,8 @@ const Jobs = () => {
                                             setApplicationFilter('all')
                                             setRecruiterFilter('all')
                                             handleFiltersChange({ is_active: true, page: 1, limit: 12 })
-                                        }}
+                                            }}
+                                            className='cursor-pointer'
                                     >
                                         {applicationFilter !== 'all' || recruiterFilter !== 'all' ? 'View All Jobs' : 'Clear All Filters'}
                                     </Button>
@@ -497,7 +498,7 @@ const Jobs = () => {
                                                             size="sm"
                                                             onClick={() => handlePageChange(pagination.current_page - 1)}
                                                             disabled={!pagination.has_prev_page || loading}
-                                                            className="gap-1"
+                                                            className="gap-1 cursor-pointer"
                                                         >
                                                             <ChevronLeft size={14} />
                                                             Previous
@@ -518,7 +519,7 @@ const Jobs = () => {
                                                                         size="sm"
                                                                         onClick={() => handlePageChange(page)}
                                                                         disabled={loading}
-                                                                        className="w-8 h-8 p-0"
+                                                                        className="w-8 h-8 p-0 cursor-pointer"
                                                                     >
                                                                         {page}
                                                                     </Button>
@@ -531,7 +532,7 @@ const Jobs = () => {
                                                             size="sm"
                                                             onClick={() => handlePageChange(pagination.current_page + 1)}
                                                             disabled={!pagination.has_next_page || loading}
-                                                            className="gap-1"
+                                                            className="gap-1 cursor-pointer"
                                                         >
                                                             Next
                                                             <ChevronRight size={14} />

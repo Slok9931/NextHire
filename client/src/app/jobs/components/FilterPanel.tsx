@@ -126,7 +126,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onFiltersChange, isLoading })
                             variant="ghost"
                             size="sm"
                             onClick={clearAllFilters}
-                            className="text-gray-500 hover:text-gray-700"
+                            className="text-gray-500 hover:text-gray-700 cursor-pointer"
                         >
                             Clear All
                         </Button>

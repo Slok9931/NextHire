@@ -24,13 +24,6 @@ interface JobCardProps {
 const JobCard: React.FC<JobCardProps> = ({ job, hasApplied = false }) => {
     const router = useRouter()
 
-    const formatSalary = (salary: number) => {
-        if (salary >= 100000) {
-            return `$${(salary / 1000).toFixed(0)}k`
-        }
-        return `$${salary.toLocaleString()}`
-    }
-
     const getJobTypeColor = (jobType: string) => {
         const colors = {
             'full_time': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -95,7 +88,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, hasApplied = false }) => {
                                 {job?.company?.name && (
                                     <button
                                         onClick={handleViewCompany}
-                                        className="text-[#494bd6] hover:text-[#2b2ed6] font-medium text-sm flex items-center gap-1 hover:underline"
+                                        className="text-[#494bd6] hover:text-[#2b2ed6] font-medium text-sm flex items-center gap-1 hover:underline cursor-pointer"
                                     >
                                         {job.company.name}
                                         <ExternalLink size={12} />
@@ -106,7 +99,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, hasApplied = false }) => {
                         <div className="text-right shrink-0">
                             <div className="flex items-center gap-1 text-[#494bd6] font-semibold">
                                 <DollarSign size={16} />
-                                <span>{formatSalary(job.salary)}/year</span>
+                                <span>{job.salary}</span>
                             </div>
                         </div>
                     </div>
