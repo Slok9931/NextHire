@@ -188,7 +188,7 @@ export interface AppContextType {
     getAllRoles: () => Promise<string[]>;
     applyForJob: (jobId: number) => Promise<{ success: boolean; data: any }>;
     getMyApplications: () => Promise<Application[]>;
-    checkJobApplication: (jobId: number) => Promise<boolean>;
+    checkJobApplication: (jobId: number) => Promise<string>;
     refreshUser: () => Promise<void>;
     getAllApplicationsForJob: (jobId: number) => Promise<JobApplication[]>;
     updateApplicationStatus: (applicationId: number, status: string) => Promise<{ success: boolean }>;

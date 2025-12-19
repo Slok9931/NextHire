@@ -427,15 +427,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }
 
-    async function checkJobApplication(jobId: number): Promise<boolean> {
+    async function checkJobApplication(jobId: number): Promise<string> {
         try {
-            if (!isAuth || !token) return false;
-            
+            if (!isAuth || !token) return '';
+
             const applications = await getMyApplications();
-            return applications.some((app: any) => app.job_id === jobId);
+            const app = applications.find((app: any) => app.job_id === jobId);
+            return app?.status || '';
         } catch (error) {
             console.error('Error checking job application:', error);
-            return false;
+            return '';
         }
     }
 

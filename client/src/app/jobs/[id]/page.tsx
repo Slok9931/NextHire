@@ -23,7 +23,8 @@ import {
     Send,
     Eye,
     AlertTriangle,
-    UserCheck
+    UserCheck,
+    XCircle
 } from 'lucide-react'
 import { useAppData } from '@/context/AppContext'
 import { Job } from '@/type'
@@ -39,7 +40,7 @@ const JobPage = () => {
     const [job, setJob] = useState<Job | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const [hasApplied, setHasApplied] = useState(false)
+    const [applicationStatus, setApplicationStatus] = useState('')
     const [checkingApplication, setCheckingApplication] = useState(false)
     const [activeTab, setActiveTab] = useState('details')
 
@@ -80,8 +81,8 @@ const JobPage = () => {
 
         try {
             setCheckingApplication(true)
-            const applied = await checkJobApplication(job.job_id)
-            setHasApplied(applied)
+            const status = await checkJobApplication(job.job_id)
+            setApplicationStatus(status)
         } catch (error) {
             console.error('Error checking application status:', error)
         } finally {
@@ -109,14 +110,24 @@ const JobPage = () => {
 
         if (!job) return
 
-        if (hasApplied) {
+        if (applicationStatus === 'applied') {
             toast.error('You have already applied for this job')
+            return
+        }
+
+        if (applicationStatus === 'hired') {
+            toast.error('You have already been hired for this position')
+            return
+        }
+
+        if (applicationStatus === 'rejected') {
+            toast.error('Your previous application was not selected')
             return
         }
 
         try {
             await applyForJob(job.job_id)
-            setHasApplied(true)
+            setApplicationStatus('applied')
             await checkApplicationStatus()
         } catch (error) {
             console.error('Error applying for job:', error)
@@ -153,6 +164,128 @@ const JobPage = () => {
         return colors[workLocation as keyof typeof colors] || 'bg-gray-100 text-gray-800'
     }
 
+    const getApplicationStatusBadge = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'applied':
+                return (
+                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                        <Clock className="w-3 h-3 mr-1" />
+                        APPLIED
+                    </Badge>
+                )
+            case 'hired':
+                return (
+                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        HIRED
+                    </Badge>
+                )
+            case 'rejected':
+                return (
+                    <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                        <XCircle className="w-3 h-3 mr-1" />
+                        NOT SELECTED
+                    </Badge>
+                )
+            default:
+                return null
+        }
+    }
+
+    const getApplicationStatusAlert = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'applied':
+                return (
+                    <Alert className="mb-6 border-blue-200 bg-blue-50 dark:bg-blue-950">
+                        <Clock className="h-4 w-4 text-blue-600" />
+                        <AlertDescription className="text-blue-800 dark:text-blue-200">
+                            Application submitted successfully! Your application is under review by the recruiter.
+                        </AlertDescription>
+                    </Alert>
+                )
+            case 'hired':
+                return (
+                    <Alert className="mb-6 border-green-200 bg-green-50 dark:bg-green-950">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <AlertDescription className="text-green-800 dark:text-green-200">
+                            🎉 Congratulations! You have been selected for this position. The recruiter will contact you soon with next steps.
+                        </AlertDescription>
+                    </Alert>
+                )
+            case 'rejected':
+                return (
+                    <Alert className="mb-6 border-red-200 bg-red-50 dark:bg-red-950">
+                        <XCircle className="h-4 w-4 text-red-600" />
+                        <AlertDescription className="text-red-800 dark:text-red-200">
+                            Your application was not selected for this position. Don't give up - keep exploring other opportunities!
+                        </AlertDescription>
+                    </Alert>
+                )
+            default:
+                return null
+        }
+    }
+
+    const getStatusCardStyle = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'applied':
+                return "border-blue-500 bg-linear-to-br from-blue-500 to-blue-600 text-white"
+            case 'hired':
+                return "border-green-500 bg-linear-to-br from-green-500 to-green-600 text-white"
+            case 'rejected':
+                return "border-red-500 bg-linear-to-br from-red-500 to-red-600 text-white"
+            default:
+                return "border-[#494bd6] bg-linear-to-br from-[#494bd6] to-[#2b2ed6] text-white"
+        }
+    }
+
+    const getStatusCardText = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'applied':
+                return "text-blue-100"
+            case 'hired':
+                return "text-green-100"
+            case 'rejected':
+                return "text-red-100"
+            default:
+                return "text-blue-100"
+        }
+    }
+
+    const getApplicationStatusDisplay = (status: string) => {
+        switch (status.toLowerCase()) {
+            case 'applied':
+                return (
+                    <div className="bg-white/10 rounded-lg p-3">
+                        <Clock className="mx-auto mb-2 text-blue-200" size={24} />
+                        <p className="text-sm font-medium">Application Under Review</p>
+                        <p className="text-xs text-blue-100 mt-1">We'll notify you of any updates</p>
+                    </div>
+                )
+            case 'hired':
+                return (
+                    <div className="bg-white/10 rounded-lg p-3">
+                        <div className="flex items-center justify-center mb-2">
+                            <CheckCircle className="text-green-200 mr-1" size={24} />
+                            <span className="text-lg">🎉</span>
+                        </div>
+                        <p className="text-sm font-medium">Congratulations! You're Hired</p>
+                        <p className="text-xs text-green-100 mt-1">The recruiter will contact you soon</p>
+                    </div>
+                )
+            case 'rejected':
+                return (
+                    <div className="bg-white/10 rounded-lg p-3">
+                        <XCircle className="mx-auto mb-2 text-red-200" size={24} />
+                        <p className="text-sm font-medium">Application Not Selected</p>
+                        <p className="text-xs text-red-100 mt-1">Keep exploring other opportunities</p>
+                    </div>
+                )
+            default:
+                return null
+        }
+    }
+
     const formatBulletPoints = (text: string) => {
         return text.split('\n').filter(line => line.trim()).map((line, index) => (
             <li key={index} className="flex items-start gap-2">
@@ -163,6 +296,8 @@ const JobPage = () => {
     }
 
     const isJobOwner = user && job && Number(user.user_id) === job.posted_by_recruiter_id
+    const hasApplied = applicationStatus && applicationStatus !== ''
+    const canApply = !hasApplied && job?.is_active && isAuth && user?.role === 'jobseeker' && user?.resume
 
     if (loading) return <Loading />
 
@@ -204,14 +339,7 @@ const JobPage = () => {
                 </div>
 
                 {/* Application Status Alert */}
-                {hasApplied && (
-                    <Alert className="mb-6 border-green-200 bg-green-50 dark:bg-green-950">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800 dark:text-green-200">
-                            Application submitted successfully! We have shared your profile with the recruiter.
-                        </AlertDescription>
-                    </Alert>
-                )}
+                {applicationStatus && getApplicationStatusAlert(applicationStatus)}
 
                 {/* Resume Missing Alert */}
                 {isAuth && user?.role === 'jobseeker' && !user?.resume && job.is_active && !hasApplied && (
@@ -222,7 +350,7 @@ const JobPage = () => {
                             <Button
                                 variant="link"
                                 className="p-0 h-auto text-yellow-600 hover:text-yellow-800 cursor-pointer"
-                                onClick={() => router.push('/profile')}
+                                onClick={() => router.push('/account')}
                             >
                                 Upload resume
                             </Button>
@@ -305,11 +433,7 @@ const JobPage = () => {
                                                 ACTIVELY HIRING
                                             </Badge>
                                         )}
-                                        {hasApplied && (
-                                            <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                APPLIED
-                                            </Badge>
-                                        )}
+                                        {applicationStatus && getApplicationStatusBadge(applicationStatus)}
                                         {isJobOwner && (
                                             <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
                                                 YOUR JOB
@@ -328,31 +452,27 @@ const JobPage = () => {
                             {/* Salary & Apply Section */}
                             {!isJobOwner && (
                                 <div className="lg:w-80 shrink-0">
-                                    <Card className="border-[#494bd6] bg-linear-to-br from-[#494bd6] to-[#2b2ed6] text-white">
+                                    <Card className={getStatusCardStyle(applicationStatus)}>
                                         <CardContent className="p-6 text-center">
                                             <div className="flex items-center justify-center gap-2 mb-2">
                                                 <DollarSign size={24} />
                                                 <span className="text-3xl font-bold">
-                                                    {formatSalary(job.salary)}
+                                                    {job.salary}
                                                 </span>
                                             </div>
-                                            <p className="text-blue-100 mb-4">per year</p>
+                                            <p className={`${getStatusCardText(applicationStatus)} mb-4`}>per year</p>
 
                                             {checkingApplication ? (
                                                 <div className="bg-white/10 rounded-lg p-3">
-                                                    <Clock className="mx-auto mb-2 text-blue-300 animate-spin" size={24} />
+                                                    <Clock className="mx-auto mb-2 text-white animate-spin" size={24} />
                                                     <p className="text-sm font-medium">Checking Application Status...</p>
                                                 </div>
-                                            ) : hasApplied ? (
-                                                <div className="bg-white/10 rounded-lg p-3">
-                                                    <CheckCircle className="mx-auto mb-2 text-green-300" size={24} />
-                                                    <p className="text-sm font-medium">Application Submitted</p>
-                                                    <p className="text-xs text-blue-100 mt-1">We'll notify you of any updates</p>
-                                                </div>
+                                            ) : applicationStatus ? (
+                                                getApplicationStatusDisplay(applicationStatus)
                                             ) : job.is_active ? (
                                                 <Button
                                                     onClick={handleApplyNow}
-                                                    disabled={btnLoading || !isAuth || (user?.role !== 'jobseeker') || hasApplied}
+                                                    disabled={btnLoading || !canApply}
                                                     className="w-full bg-white text-[#494bd6] hover:bg-gray-100 font-semibold cursor-pointer"
                                                 >
                                                     {btnLoading ? (
@@ -370,6 +490,11 @@ const JobPage = () => {
                                                             <Briefcase className="mr-2 h-4 w-4" />
                                                             Job Seekers Only
                                                         </>
+                                                    ) : !user?.resume ? (
+                                                        <>
+                                                            <AlertTriangle className="mr-2 h-4 w-4" />
+                                                            Upload Resume First
+                                                        </>
                                                     ) : (
                                                         <>
                                                             <Send className="mr-2 h-4 w-4" />
@@ -383,9 +508,9 @@ const JobPage = () => {
                                                 </div>
                                             )}
 
-                                            {isAuth && user?.resume && !hasApplied && (
-                                                <div className="mt-4 pt-4 border-t border-blue-200">
-                                                    <p className="text-xs text-blue-100 mb-2">Your resume will be submitted</p>
+                                            {isAuth && user?.resume && canApply && (
+                                                <div className="mt-4 pt-4 border-t border-white/20">
+                                                    <p className={`text-xs ${getStatusCardText(applicationStatus)} mb-2`}>Your resume will be submitted</p>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -517,14 +642,12 @@ const JobPage = () => {
                                             <span className="text-gray-500">Posted</span>
                                             <span className="font-medium">{new Date(job.created_at).toLocaleDateString()}</span>
                                         </div>
-                                        {hasApplied && (
+                                        {applicationStatus && (
                                             <>
                                                 <Separator />
                                                 <div className="flex items-center justify-between">
                                                     <span className="text-gray-500">Application Status</span>
-                                                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                                                        Applied
-                                                    </Badge>
+                                                    {getApplicationStatusBadge(applicationStatus)}
                                                 </div>
                                             </>
                                         )}
@@ -617,7 +740,7 @@ const JobPage = () => {
                                                 </Button>
                                                 <Button
                                                     onClick={handleApplyNow}
-                                                    disabled={btnLoading || !isAuth || (user?.role !== 'jobseeker') || hasApplied}
+                                                    disabled={btnLoading || !canApply}
                                                     className="cursor-pointer"
                                                 >
                                                     {btnLoading ? (
@@ -634,6 +757,11 @@ const JobPage = () => {
                                                         <>
                                                             <Briefcase className="mr-2 h-4 w-4" />
                                                             Job Seekers Only
+                                                        </>
+                                                    ) : !user?.resume ? (
+                                                        <>
+                                                            <AlertTriangle className="mr-2 h-4 w-4" />
+                                                            Upload Resume First
                                                         </>
                                                     ) : (
                                                         <>
