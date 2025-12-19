@@ -24,6 +24,7 @@ import { useAppData } from '@/context/AppContext'
 import { JobApplication } from '@/type'
 import { Input } from '@/components/ui/input'
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 
 interface ApplicationsTabProps {
     jobId: number
@@ -280,7 +281,9 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                             <h3 className="font-semibold text-lg mb-1 text-gray-900 dark:text-white">
                                                                 {application.applicant_name}
                                                             </h3>
-                                                            <ExternalLink size={14} className='hover:text-[#494bd6] cursor-pointer' onClick={() => redirect(`/account/${application.applicant_id}`)} />
+                                                            <Link href={`/account/${application.applicant_id}`} target="_blank">
+                                                                <ExternalLink size={14} className='hover:text-[#494bd6] cursor-pointer' />
+                                                            </Link>
                                                         </div>
                                                         <div className="flex flex-col justify-center md:flex-row md:items-center md:justify-start gap-4 text-sm text-gray-500 mb-2">
                                                             <div className="flex items-center gap-1">

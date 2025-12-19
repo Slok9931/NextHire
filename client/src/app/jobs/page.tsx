@@ -5,17 +5,18 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { 
-    Search, 
-    Briefcase, 
-    ChevronLeft, 
-    ChevronRight, 
+import {
+    Search,
+    Briefcase,
+    ChevronLeft,
+    ChevronRight,
     Loader2,
     Filter,
     X,
     CheckCircle,
     Clock,
-    FileText
+    FileText,
+    User
 } from 'lucide-react'
 import { useAppData } from '@/context/AppContext'
 import { Job, Application } from '@/type'
@@ -25,7 +26,7 @@ import Loading from '@/components/loading'
 
 const Jobs = () => {
     const { getAllJobs, getMyApplications, isAuth, user } = useAppData()
-    
+
     const [jobs, setJobs] = useState<Job[]>([])
     const [loading, setLoading] = useState(true)
     const [applicationsLoading, setApplicationsLoading] = useState(false)
@@ -35,6 +36,7 @@ const Jobs = () => {
     const [quickSearch, setQuickSearch] = useState('')
     const [myApplications, setMyApplications] = useState<Application[]>([])
     const [applicationFilter, setApplicationFilter] = useState<'all' | 'applied' | 'not_applied'>('all')
+    const [recruiterFilter, setRecruiterFilter] = useState<'all' | 'my_jobs'>('all')
 
     useEffect(() => {
         fetchJobs()
@@ -51,6 +53,11 @@ const Jobs = () => {
             fetchJobs()
         }
     }, [applicationFilter])
+
+    useEffect(() => {
+        // Refetch jobs when recruiter filter changes
+        handleRecruiterFilterChange()
+    }, [recruiterFilter])
 
     const fetchMyApplications = async () => {
         try {
@@ -77,6 +84,18 @@ const Jobs = () => {
         }
     }
 
+    const handleRecruiterFilterChange = () => {
+        if (recruiterFilter === 'my_jobs' && isAuth && user?.role === 'recruiter') {
+            const newFilters = { ...filters, recruiter_id: user.user_id, page: 1 }
+            setFilters(newFilters)
+            fetchJobs(newFilters)
+        } else if (recruiterFilter === 'all') {
+            const { recruiter_id, ...newFilters } = filters
+            setFilters({ ...newFilters, page: 1 })
+            fetchJobs({ ...newFilters, page: 1 })
+        }
+    }
+
     const applyApplicationFilter = async () => {
         if (!isAuth || user?.role !== 'jobseeker' || applicationFilter === 'all') {
             return
@@ -85,14 +104,14 @@ const Jobs = () => {
         try {
             setLoading(true)
             // Fetch all jobs first
-            const { jobs: allJobs, pagination: paginationData } = await getAllJobs({ 
-                ...filters, 
-                page: 1, 
+            const { jobs: allJobs, pagination: paginationData } = await getAllJobs({
+                ...filters,
+                page: 1,
                 limit: 1000 // Get more jobs for filtering
             })
-            
+
             const appliedJobIds = new Set(myApplications.map(app => app.job_id))
-            
+
             let filteredJobs: Job[] = []
             if (applicationFilter === 'applied') {
                 filteredJobs = allJobs.filter(job => appliedJobIds.has(job.job_id))
@@ -104,9 +123,9 @@ const Jobs = () => {
             const startIndex = (filters.page - 1) * filters.limit
             const endIndex = startIndex + filters.limit
             const paginatedJobs = filteredJobs.slice(startIndex, endIndex)
-            
+
             const totalPages = Math.ceil(filteredJobs.length / filters.limit)
-            
+
             setJobs(paginatedJobs)
             setPagination({
                 ...paginationData,
@@ -126,29 +145,24 @@ const Jobs = () => {
     const handleFiltersChange = (newFilters: any) => {
         const updatedFilters = { ...newFilters, limit: 12 }
         setFilters(updatedFilters)
-        
-        if (applicationFilter === 'all') {
-            fetchJobs(updatedFilters)
-        } else {
-            // If application filter is active, we need to reapply it
-            setApplicationFilter('all') // Reset to trigger useEffect
-            setTimeout(() => {
-                setFilters(updatedFilters)
-                fetchJobs(updatedFilters)
-            }, 100)
-        }
+
+        // Reset other filters when applying new filters
+        setApplicationFilter('all')
+        setRecruiterFilter('all')
+
+        fetchJobs(updatedFilters)
     }
 
     const handlePageChange = (page: number) => {
         const newFilters = { ...filters, page }
         setFilters(newFilters)
-        
+
         if (applicationFilter === 'all') {
             fetchJobs(newFilters)
         } else {
             applyApplicationFilter()
         }
-        
+
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
@@ -156,6 +170,7 @@ const Jobs = () => {
         const newFilters = { ...filters, search: quickSearch, page: 1 }
         setFilters(newFilters)
         setApplicationFilter('all') // Reset application filter when searching
+        setRecruiterFilter('all') // Reset recruiter filter when searching
         fetchJobs(newFilters)
     }
 
@@ -174,7 +189,7 @@ const Jobs = () => {
 
     const getApplicationStats = () => {
         if (!isAuth || user?.role !== 'jobseeker') return null
-        
+
         const totalApplications = myApplications.length
         return {
             total: totalApplications,
@@ -216,7 +231,7 @@ const Jobs = () => {
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* Quick Search */}
                         <div className="flex gap-2 w-full lg:w-auto lg:min-w-96">
                             <div className="relative flex-1 lg:flex-none lg:w-80">
@@ -287,38 +302,64 @@ const Jobs = () => {
                                                     </p>
                                                 )}
                                             </div>
-                                            
-                                            {/* Application Filter - Only for Job Seekers */}
-                                            {isAuth && user?.role === 'jobseeker' && (
-                                                <div className="flex items-center gap-2">
-                                                    {applicationsLoading && (
-                                                        <Clock className="animate-spin text-gray-400" size={16} />
-                                                    )}
-                                                    <Select 
-                                                        value={applicationFilter} 
-                                                        onValueChange={(value: 'all' | 'applied' | 'not_applied') => setApplicationFilter(value)}
-                                                    >
-                                                        <SelectTrigger className="w-48 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]">
-                                                            <SelectValue placeholder="Filter by application" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="all">All Jobs</SelectItem>
-                                                            <SelectItem value="applied">
-                                                                <div className="flex items-center gap-2">
-                                                                    <CheckCircle size={14} className="text-green-600" />
-                                                                    Applied Jobs ({applicationStats?.applied || 0})
-                                                                </div>
-                                                            </SelectItem>
-                                                            <SelectItem value="not_applied">
-                                                                <div className="flex items-center gap-2">
-                                                                    <Clock size={14} className="text-orange-600" />
-                                                                    Not Applied Yet
-                                                                </div>
-                                                            </SelectItem>
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            )}
+
+                                            {/* Filters Row */}
+                                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                                                {/* Application Filter - Only for Job Seekers */}
+                                                {isAuth && user?.role === 'jobseeker' && (
+                                                    <div className="flex items-center gap-2">
+                                                        {applicationsLoading && (
+                                                            <Clock className="animate-spin text-gray-400" size={16} />
+                                                        )}
+                                                        <Select
+                                                            value={applicationFilter}
+                                                            onValueChange={(value: 'all' | 'applied' | 'not_applied') => setApplicationFilter(value)}
+                                                        >
+                                                            <SelectTrigger className="w-48 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]">
+                                                                <SelectValue placeholder="Filter by application" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">All Jobs</SelectItem>
+                                                                <SelectItem value="applied">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <CheckCircle size={14} className="text-green-600" />
+                                                                        Applied Jobs ({applicationStats?.applied || 0})
+                                                                    </div>
+                                                                </SelectItem>
+                                                                <SelectItem value="not_applied">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Clock size={14} className="text-orange-600" />
+                                                                        Not Applied Yet
+                                                                    </div>
+                                                                </SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+
+                                                {/* Recruiter Filter - Only for Recruiters */}
+                                                {isAuth && user?.role === 'recruiter' && (
+                                                    <div className="flex items-center gap-2">
+                                                        <Select
+                                                            value={recruiterFilter}
+                                                            onValueChange={(value: 'all' | 'my_jobs') => setRecruiterFilter(value)}
+                                                        >
+                                                            <SelectTrigger className="w-48 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]">
+                                                                <SelectValue placeholder="Filter by recruiter" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectItem value="all">All Jobs</SelectItem>
+                                                                <SelectItem value="my_jobs">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <User size={14} className="text-[#494bd6]" />
+                                                                        My Posted Jobs
+                                                                    </div>
+                                                                </SelectItem>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
 
                                         {/* Active Filters Display */}
@@ -327,7 +368,7 @@ const Jobs = () => {
                                                 <Badge variant="secondary" className="gap-1">
                                                     <Search size={12} />
                                                     Search: "{filters.search}"
-                                                    <button 
+                                                    <button
                                                         onClick={clearQuickSearch}
                                                         className="ml-1 hover:text-red-500"
                                                     >
@@ -343,8 +384,20 @@ const Jobs = () => {
                                                         <Clock size={12} className="text-orange-600" />
                                                     )}
                                                     {applicationFilter === 'applied' ? 'Applied Jobs' : 'Not Applied'}
-                                                    <button 
+                                                    <button
                                                         onClick={() => setApplicationFilter('all')}
+                                                        className="ml-1 hover:text-red-500"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </Badge>
+                                            )}
+                                            {recruiterFilter !== 'all' && (
+                                                <Badge variant="secondary" className="gap-1">
+                                                    <User size={12} className="text-[#494bd6]" />
+                                                    My Posted Jobs
+                                                    <button
+                                                        onClick={() => setRecruiterFilter('all')}
                                                         className="ml-1 hover:text-red-500"
                                                     >
                                                         <X size={12} />
@@ -387,28 +440,33 @@ const Jobs = () => {
                                 <CardContent className="text-center py-12">
                                     <Briefcase className="mx-auto text-gray-400 mb-4" size={64} />
                                     <h3 className="text-xl font-semibold mb-2">
-                                        {applicationFilter === 'applied' 
-                                            ? 'No Applied Jobs Found' 
+                                        {applicationFilter === 'applied'
+                                            ? 'No Applied Jobs Found'
                                             : applicationFilter === 'not_applied'
-                                            ? 'All Jobs Applied!'
-                                            : 'No Jobs Found'
+                                                ? 'All Jobs Applied!'
+                                                : recruiterFilter === 'my_jobs'
+                                                    ? 'No Jobs Posted Yet'
+                                                    : 'No Jobs Found'
                                         }
                                     </h3>
                                     <p className="text-gray-500 mb-6">
-                                        {applicationFilter === 'applied' 
+                                        {applicationFilter === 'applied'
                                             ? 'You haven\'t applied to any jobs yet. Start exploring and find your dream job!'
                                             : applicationFilter === 'not_applied'
-                                            ? 'Congratulations! You\'ve applied to all available jobs matching your criteria.'
-                                            : 'We couldn\'t find any jobs matching your criteria. Try adjusting your filters or search terms.'
+                                                ? 'Congratulations! You\'ve applied to all available jobs matching your criteria.'
+                                                : recruiterFilter === 'my_jobs'
+                                                    ? 'You haven\'t posted any jobs yet. Start by creating your first job posting.'
+                                                    : 'We couldn\'t find any jobs matching your criteria. Try adjusting your filters or search terms.'
                                         }
                                     </p>
-                                    <Button 
+                                    <Button
                                         onClick={() => {
                                             setApplicationFilter('all')
+                                            setRecruiterFilter('all')
                                             handleFiltersChange({ is_active: true, page: 1, limit: 12 })
                                         }}
                                     >
-                                        {applicationFilter !== 'all' ? 'View All Jobs' : 'Clear All Filters'}
+                                        {applicationFilter !== 'all' || recruiterFilter !== 'all' ? 'View All Jobs' : 'Clear All Filters'}
                                     </Button>
                                 </CardContent>
                             </Card>
@@ -416,8 +474,8 @@ const Jobs = () => {
                             <>
                                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                                     {jobs.map((job) => (
-                                        <JobCard 
-                                            key={job.job_id} 
+                                        <JobCard
+                                            key={job.job_id}
                                             job={job}
                                             hasApplied={isJobApplied(job.job_id)}
                                         />
@@ -444,15 +502,15 @@ const Jobs = () => {
                                                             <ChevronLeft size={14} />
                                                             Previous
                                                         </Button>
-                                                        
+
                                                         <div className="flex items-center gap-1">
-                                                            {Array.from({ 
-                                                                length: Math.min(5, pagination.total_pages) 
+                                                            {Array.from({
+                                                                length: Math.min(5, pagination.total_pages)
                                                             }, (_, i) => {
                                                                 const startPage = Math.max(1, pagination.current_page - 2)
                                                                 const page = startPage + i
                                                                 if (page > pagination.total_pages) return null
-                                                                
+
                                                                 return (
                                                                     <Button
                                                                         key={page}

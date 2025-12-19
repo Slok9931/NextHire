@@ -369,7 +369,7 @@ export const getAllJobs = tryCatch(async (req, res) => {
           SELECT 
             j.job_id, j.title, j.description, j.location, j.job_type,
             j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
-            j.work_location, j.created_at, j.is_active,
+            j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
             c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website
           FROM jobs j
           JOIN companies c ON j.company_id = c.company_id
@@ -395,7 +395,7 @@ export const getAllJobs = tryCatch(async (req, res) => {
           SELECT 
             j.job_id, j.title, j.description, j.location, j.job_type,
             j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
-            j.work_location, j.created_at, j.is_active,
+            j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
             c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website
           FROM jobs j
           JOIN companies c ON j.company_id = c.company_id
