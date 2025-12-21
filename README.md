@@ -197,6 +197,8 @@ npm run type-check  # Run TypeScript checks
 
 ### Docker Support
 
+Configure all the `.env` files first for each service then run:
+
 ```bash
 # Build all services
 docker-compose build
