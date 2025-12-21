@@ -465,7 +465,6 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                                     <Button
                                                                         size="sm"
                                                                         className="gap-2 bg-green-600 hover:bg-green-700 text-white cursor-pointer"
-                                                                        disabled={updatingStatus[application.application_id] !== null}
                                                                         onClick={() => handleStatusUpdate(application.application_id, 'hired')}
                                                                     >
                                                                         {updatingStatus[application.application_id] === 'hired' ? (
@@ -479,7 +478,6 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                                         size="sm"
                                                                         variant="destructive"
                                                                         className="gap-2 cursor-pointer"
-                                                                        disabled={updatingStatus[application.application_id] !== null}
                                                                         onClick={() => handleStatusUpdate(application.application_id, 'rejected')}
                                                                     >
                                                                         {updatingStatus[application.application_id] === 'rejected' ? (
