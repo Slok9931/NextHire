@@ -1,0 +1,52 @@
+services:
+  kafka:
+    image: apache/kafka:4.1.0
+    container_name: kafka
+    restart: always
+
+  auth:
+    image: sloktulsyan/auth:amd64
+    container_name: auth
+    env_file: ./services/auth/.env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - kafka
+    restart: always
+
+  utils:
+    image: sloktulsyan/utils:amd64
+    container_name: utils
+    env_file: ./services/utils/.env
+    ports:
+      - "5001:5001"
+    depends_on:
+      - kafka
+    restart: always
+
+  user:
+    image: sloktulsyan/user:amd64
+    container_name: user
+    env_file: ./services/user/.env
+    ports:
+      - "5002:5002"
+    depends_on:
+      - kafka
+    restart: always
+
+  job:
+    image: sloktulsyan/job:amd64
+    container_name: job
+    env_file: ./services/job/.env
+    ports:
+      - "5003:5003"
+    depends_on:
+      - kafka
+    restart: always
+
+  client:
+    image: sloktulsyan/client:amd64
+    container_name: client
+    ports:
+      - "3000:3000"
+    restart: always
