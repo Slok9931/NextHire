@@ -5,7 +5,7 @@ services:
     restart: always
 
   auth:
-    image: sloktulsyan/auth:amd64
+    image: sloktulsyan/auth:latest
     container_name: auth
     env_file: ./services/auth/.env
     ports:
@@ -15,7 +15,7 @@ services:
     restart: always
 
   utils:
-    image: sloktulsyan/utils:amd64
+    image: sloktulsyan/utils:latest
     container_name: utils
     env_file: ./services/utils/.env
     ports:
@@ -25,7 +25,7 @@ services:
     restart: always
 
   user:
-    image: sloktulsyan/user:amd64
+    image: sloktulsyan/user:latest
     container_name: user
     env_file: ./services/user/.env
     ports:
@@ -35,7 +35,7 @@ services:
     restart: always
 
   job:
-    image: sloktulsyan/job:amd64
+    image: sloktulsyan/job:latest
     container_name: job
     env_file: ./services/job/.env
     ports:
@@ -45,7 +45,7 @@ services:
     restart: always
 
   client:
-    image: sloktulsyan/client:amd64
+    image: sloktulsyan/client:latest
     container_name: client
     ports:
       - "3000:3000"
