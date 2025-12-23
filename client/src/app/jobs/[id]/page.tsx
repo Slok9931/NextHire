@@ -364,11 +364,11 @@ const JobPage = () => {
                         <div className="flex flex-col lg:flex-row gap-6">
                             {/* Company Logo & Info */}
                             <div className="flex items-start gap-4 flex-1">
-                                {job.company.logo && (
+                                {job.company_logo && (
                                     <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0">
                                         <img
-                                            src={job.company.logo}
-                                            alt={job.company.name}
+                                            src={job.company_logo}
+                                            alt={job.company_name}
                                             className="w-full h-full object-cover"
                                         />
                                     </div>
@@ -377,13 +377,13 @@ const JobPage = () => {
                                     <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">
                                         {job.title}
                                     </h1>
-                                    {job.company.name && (
+                                    {job.company_name && (
                                         <button
                                             onClick={handleViewCompany}
                                             className="text-[#494bd6] hover:text-[#2b2ed6] font-semibold text-lg flex items-center gap-2 hover:underline mb-4 cursor-pointer"
                                         >
                                             <Building2 size={20} />
-                                            {job.company.name}
+                                            {job.company_name}
                                             <ExternalLink size={16} />
                                         </button>
                                     )}
@@ -402,11 +402,11 @@ const JobPage = () => {
                                             <Users size={16} />
                                             <span>{job.openings} opening{job.openings !== 1 ? 's' : ''}</span>
                                         </div>
-                                        {job.company.website && (
+                                        {job.company_website && (
                                             <div className="flex items-center gap-2">
                                                 <Globe size={16} />
                                                 <a
-                                                    href={job.company.website}
+                                                    href={job.company_website}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="text-[#494bd6] hover:text-[#2b2ed6] hover:underline"
@@ -655,22 +655,22 @@ const JobPage = () => {
                                 </Card>
 
                                 {/* Company Quick Info */}
-                                {job.company.name && (
+                                {job.company_name && (
                                     <Card className="shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
                                         <CardHeader>
-                                            <CardTitle className="text-lg">About {job.company.name}</CardTitle>
+                                            <CardTitle className="text-lg">About {job.company_name}</CardTitle>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
                                             <div className="flex items-center gap-3">
-                                                {job.company.logo && (
+                                                {job.company_logo && (
                                                     <img
-                                                        src={job.company.logo}
-                                                        alt={job.company.name}
+                                                        src={job.company_logo}
+                                                        alt={job.company_name}
                                                         className="w-12 h-12 rounded-lg object-cover"
                                                     />
                                                 )}
                                                 <div>
-                                                    <h4 className="font-semibold">{job.company.name}</h4>
+                                                    <h4 className="font-semibold">{job.company_name}</h4>
                                                     <p className="text-sm text-gray-500">Visit company page for more details</p>
                                                 </div>
                                             </div>
@@ -682,11 +682,11 @@ const JobPage = () => {
                                                 <Building2 className="mr-2 h-4 w-4" />
                                                 View Company Profile
                                             </Button>
-                                            {job.company.website && (
+                                            {job.company_website && (
                                                 <Button
                                                     variant="ghost"
                                                     className="w-full cursor-pointer"
-                                                    onClick={() => window.open(job.company.website!, '_blank')}
+                                                    onClick={() => window.open(job.company_website!, '_blank')}
                                                 >
                                                     <Globe className="mr-2 h-4 w-4" />
                                                     Company Website
@@ -727,7 +727,7 @@ const JobPage = () => {
                                             <div>
                                                 <h3 className="font-semibold text-lg mb-1">Ready to Apply?</h3>
                                                 <p className="text-gray-600 dark:text-gray-400">
-                                                    Don't miss out on this opportunity at {job.company.name}
+                                                    Don't miss out on this opportunity at {job.company_name}
                                                 </p>
                                             </div>
                                             <div className="flex gap-3">

@@ -93,8 +93,10 @@ export interface Job {
     openings: number;
     is_active: boolean;
     created_at: string;
-    company: Company;
     company_id: number;
+    company_name: string;
+    company_logo: string;
+    company_website: string;
 }
 
 export interface Application {

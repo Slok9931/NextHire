@@ -10,6 +10,10 @@ export const auth_service = "http://localhost:5000"
 export const utils_service = "http://localhost:5001"
 export const user_service = "http://localhost:5002"
 export const job_service = "http://localhost:5003"
+// export const auth_service = ""
+// export const utils_service = ""
+// export const user_service = ""
+// export const job_service = ""
 
 const AppContext = createContext<AppContextType | undefined>(undefined)
 

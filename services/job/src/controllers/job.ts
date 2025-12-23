@@ -484,7 +484,10 @@ export const getJobDetails = tryCatch(async (req: AuthenticatedRequest, res) => 
         throw new ErrorHandler("Associated company not found.", 404)
     }
 
-    job[0].company = company[0]
+    job[0].company_id = company[0].company_id
+    job[0].company_name = company[0].name
+    job[0].company_logo = company[0].logo
+    job[0].company_website = company[0].website
 
     if(job.length === 0) {
         throw new ErrorHandler("Job not found.", 404)

@@ -72,11 +72,11 @@ const JobCard: React.FC<JobCardProps> = ({ job, hasApplied = false }) => {
                     {/* Header with Company Info */}
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 flex-1 min-w-0">
-                            {job?.company?.logo && (
+                            {job?.company_logo && (
                                 <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0">
                                     <img
-                                        src={job.company.logo}
-                                        alt={job.company.name}
+                                        src={job.company_logo}
+                                        alt={job.company_name}
                                         className="w-full h-full object-cover"
                                     />
                                 </div>
@@ -85,12 +85,12 @@ const JobCard: React.FC<JobCardProps> = ({ job, hasApplied = false }) => {
                                 <h3 className="font-semibold text-lg mb-1 group-hover:text-[#494bd6] transition-colors line-clamp-1">
                                     {job.title}
                                 </h3>
-                                {job?.company?.name && (
+                                {job?.company_name && (
                                     <button
                                         onClick={handleViewCompany}
                                         className="text-[#494bd6] hover:text-[#2b2ed6] font-medium text-sm flex items-center gap-1 hover:underline cursor-pointer"
                                     >
-                                        {job.company.name}
+                                        {job.company_name}
                                         <ExternalLink size={12} />
                                     </button>
                                 )}
@@ -138,7 +138,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, hasApplied = false }) => {
                         </div>
                         <div className="flex items-center gap-2">
                             <Building2 size={14} />
-                            <span className="truncate">{job?.company?.name || 'Company'}</span>
+                            <span className="truncate">{job?.company_name || 'Company'}</span>
                         </div>
                     </div>
 
