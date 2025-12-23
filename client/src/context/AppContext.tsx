@@ -6,201 +6,201 @@ import toast, { Toaster } from "react-hot-toast"
 import Cookies from "js-cookie"
 import axios from "axios"
 
-export const auth_service = "http://20.187.78.13:5000"
-export const utils_service = "http://20.187.78.13:5001"
-export const user_service = "http://20.187.78.13:5002"
-export const job_service = "http://20.187.78.13:5003"
+export const auth_service = "http://localhost:5000"
+export const utils_service = "http://localhost:5001"
+export const user_service = "http://localhost:5002"
+export const job_service = "http://localhost:5003"
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [btnLoading, setBtnLoading] = useState<boolean>(false);
-    const [isAuth, setIsAuth] = useState<boolean>(false);
+    const [user, setUser] = useState<User | null>(null)
+    const [loading, setLoading] = useState<boolean>(true)
+    const [btnLoading, setBtnLoading] = useState<boolean>(false)
+    const [isAuth, setIsAuth] = useState<boolean>(false)
 
-    const token = Cookies.get("token");
+    const token = Cookies.get("token")
 
     async function fetchUser(token: string) {
         if (!token) {
-            setLoading(false);
-            setIsAuth(false);
-            return;
+            setLoading(false)
+            setIsAuth(false)
+            return
         }
-        
-        setLoading(true);
+
+        setLoading(true)
         try {
             const { data } = await axios.get(`${user_service}/api/user/me`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
-            });
-            setUser(data.data);
-            setIsAuth(true);
+            })
+            setUser(data.data)
+            setIsAuth(true)
         } catch (error) {
-            console.error('Error fetching user:', error);
-            setUser(null);
-            setIsAuth(false);
+            console.error('Error fetching user:', error)
+            setUser(null)
+            setIsAuth(false)
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
     }
 
     async function logoutUser() {
-        Cookies.remove("token", { path: "/" });
-        setUser(null);
-        setIsAuth(false);
-        toast.success("Logged out successfully");
+        Cookies.remove("token", { path: "/" })
+        setUser(null)
+        setIsAuth(false)
+        toast.success("Logged out successfully")
     }
 
     async function updateUserProfile(profileData: { name?: string; phone_number?: string; bio?: string }) {
         try {
-            setBtnLoading(true);
+            setBtnLoading(true)
             const { data } = await axios.put(`${user_service}/api/user/update-profile`, profileData, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            setUser(data.data);
-            toast.success('Profile updated successfully');
-            return { success: true, data: data.data };
+            })
+            setUser(data.data)
+            toast.success('Profile updated successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to update profile';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to update profile'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function updateProfilePicture(file: File) {
         try {
-            setBtnLoading(true);
-            const formData = new FormData();
-            formData.append('file', file);
-            
+            setBtnLoading(true)
+            const formData = new FormData()
+            formData.append('file', file)
+
             const { data } = await axios.put(`${user_service}/api/user/update-profile-picture`, formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 }
-            });
-            setUser(data.data);
-            toast.success('Profile picture updated successfully');
-            return { success: true, data: data.data };
+            })
+            setUser(data.data)
+            toast.success('Profile picture updated successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to update profile picture';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to update profile picture'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function updateResume(file: File) {
         try {
-            setBtnLoading(true);
-            const formData = new FormData();
-            formData.append('file', file);
-            
+            setBtnLoading(true)
+            const formData = new FormData()
+            formData.append('file', file)
+
             const { data } = await axios.put(`${user_service}/api/user/update-resume`, formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 }
-            });
-            setUser(data.data);
-            toast.success('Resume updated successfully');
-            return { success: true, data: data.data };
+            })
+            setUser(data.data)
+            toast.success('Resume updated successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to update resume';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to update resume'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function addSkillToUser(skillName: string, skillId?: number) {
         try {
-            setBtnLoading(true);
+            setBtnLoading(true)
             await axios.post(`${user_service}/api/user/skill/add`, {
                 skillName: skillId ? undefined : skillName,
                 skillId
             }, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
+            })
 
             const { data } = await axios.get(`${user_service}/api/user/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            setUser(data.data);
-            toast.success('Skill added successfully');
-            return { success: true, data: data.data };
+            })
+            setUser(data.data)
+            toast.success('Skill added successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to add skill';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to add skill'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function removeSkillFromUser(skillName: string) {
         try {
-            setBtnLoading(true);
+            setBtnLoading(true)
             await axios.delete(`${user_service}/api/user/skill/remove`, {
                 data: { skillName },
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
+            })
 
             const { data } = await axios.get(`${user_service}/api/user/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            setUser(data.data);
-            toast.success('Skill removed successfully');
-            return { success: true, data: data.data };
+            })
+            setUser(data.data)
+            toast.success('Skill removed successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to remove skill';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to remove skill'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function searchSkills(query: string) {
         try {
-            if (query.length < 2) return [];
-            const { data } = await axios.get(`${user_service}/api/user/skill/search?query=${query}`);
-            return data.data || [];
+            if (query.length < 2) return []
+            const { data } = await axios.get(`${user_service}/api/user/skill/search?query=${query}`)
+            return data.data || []
         } catch (error) {
-            console.error('Error searching skills:', error);
-            return [];
+            console.error('Error searching skills:', error)
+            return []
         }
     }
 
     async function createCompany(companyData: { name: string; description: string; website: string }, logo: File) {
         try {
-            setBtnLoading(true);
-            const formData = new FormData();
-            formData.append('name', companyData.name);
-            formData.append('description', companyData.description);
-            formData.append('website', companyData.website);
-            formData.append('file', logo);
-            
+            setBtnLoading(true)
+            const formData = new FormData()
+            formData.append('name', companyData.name)
+            formData.append('description', companyData.description)
+            formData.append('website', companyData.website)
+            formData.append('file', logo)
+
             const { data } = await axios.post(`${job_service}/api/job/company/new`, formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
                 }
-            });
-            toast.success('Company created successfully');
-            return { success: true, data: data.data };
+            })
+            toast.success('Company created successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to create company';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to create company'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
@@ -208,106 +208,106 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         try {
             const { data } = await axios.get(`${job_service}/api/job/company/by-recruiter`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            return data.data?.companies || [];
+            })
+            return data.data?.companies || []
         } catch (error) {
-            console.error('Error fetching companies:', error);
-            return [];
+            console.error('Error fetching companies:', error)
+            return []
         }
     }
 
     async function deleteCompany(companyId: number) {
         try {
-            setBtnLoading(true);
+            setBtnLoading(true)
             await axios.delete(`${job_service}/api/job/company/${companyId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            toast.success('Company deleted successfully');
-            return { success: true };
+            })
+            toast.success('Company deleted successfully')
+            return { success: true }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to delete company';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to delete company'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function getCompanyDetails(companyId: number): Promise<Company | null> {
         try {
-            const { data } = await axios.get(`${job_service}/api/job/company/${companyId}`,{
+            const { data } = await axios.get(`${job_service}/api/job/company/${companyId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            return data.data?.company || null;
+            })
+            return data.data?.company || null
         } catch (error) {
-            console.error('Error fetching company details:', error);
-            return null;
+            console.error('Error fetching company details:', error)
+            return null
         }
     }
 
     async function createJob(jobData: {
-        title: string;
-        description: string;
-        salary: number;
-        location: string;
-        role: string;
-        responsibilities: string;
-        qualifications: string;
-        job_type: string;
-        work_location: string;
-        company_id: number;
-        openings: number;
+        title: string
+        description: string
+        salary: number
+        location: string
+        role: string
+        responsibilities: string
+        qualifications: string
+        job_type: string
+        work_location: string
+        company_id: number
+        openings: number
     }) {
         try {
-            setBtnLoading(true);
+            setBtnLoading(true)
             const { data } = await axios.post(`${job_service}/api/job/new`, jobData, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            toast.success('Job created successfully');
-            return { success: true, data: data.data };
+            })
+            toast.success('Job created successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to create job';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to create job'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function updateJob(jobId: number, jobData: {
-        title: string;
-        description: string;
-        salary: number;
-        location: string;
-        role: string;
-        responsibilities: string;
-        qualifications: string;
-        job_type: string;
-        work_location: string;
-        openings: number;
-        is_active: boolean;
+        title: string
+        description: string
+        salary: number
+        location: string
+        role: string
+        responsibilities: string
+        qualifications: string
+        job_type: string
+        work_location: string
+        openings: number
+        is_active: boolean
     }) {
         try {
-            setBtnLoading(true);
+            setBtnLoading(true)
             const { data } = await axios.put(`${job_service}/api/job/${jobId}`, jobData, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            toast.success('Job updated successfully');
-            return { success: true, data: data.data };
+            })
+            toast.success('Job updated successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to update job';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to update job'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     async function toggleJobStatus(jobId: number, isActive: boolean) {
         try {
-            const job = await getJobDetails(jobId);
+            const job = await getJobDetails(jobId)
             if (!job) {
-                throw new Error('Job not found');
+                throw new Error('Job not found')
             }
 
             await updateJob(jobId, {
@@ -322,13 +322,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 work_location: job.work_location,
                 openings: job.openings,
                 is_active: isActive
-            });
+            })
 
-            return { success: true };
+            return { success: true }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to toggle job status';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to toggle job status'
+            toast.error(message)
+            throw new Error(message)
         }
     }
 
@@ -336,82 +336,82 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         try {
             const { data } = await axios.get(`${job_service}/api/job/${jobId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            return data.data?.job || null;
+            })
+            return data.data?.job || null
         } catch (error) {
-            console.error('Error fetching job details:', error);
-            return null;
+            console.error('Error fetching job details:', error)
+            return null
         }
     }
 
     async function getAllJobs(filters: {
-        search?: string;
-        role?: string;
-        min_salary?: number;
-        max_salary?: number;
-        job_type?: string;
-        work_location?: string;
-        min_openings?: number;
-        max_openings?: number;
-        is_active?: boolean;
-        company_id?: number;
-        page?: number;
-        limit?: number;
+        search?: string
+        role?: string
+        min_salary?: number
+        max_salary?: number
+        job_type?: string
+        work_location?: string
+        min_openings?: number
+        max_openings?: number
+        is_active?: boolean
+        company_id?: number
+        page?: number
+        limit?: number
     } = {}) {
         try {
-            const params = new URLSearchParams();
-            
+            const params = new URLSearchParams()
+
             Object.entries(filters).forEach(([key, value]) => {
                 if (value !== undefined && value !== null && value !== '') {
-                    params.append(key, value.toString());
+                    params.append(key, value.toString())
                 }
-            });
+            })
 
-            const { data } = await axios.get(`${job_service}/api/job?${params.toString()}`);
+            const { data } = await axios.get(`${job_service}/api/job?${params.toString()}`)
             return {
                 jobs: data.data?.jobs || [],
                 pagination: data.data?.pagination || {}
-            };
+            }
         } catch (error) {
-            console.error('Error fetching jobs:', error);
-            return { jobs: [], pagination: {} };
+            console.error('Error fetching jobs:', error)
+            return { jobs: [], pagination: {} }
         }
     }
 
     async function getAllCompanies(): Promise<Company[]> {
         try {
-            const { data } = await axios.get(`${job_service}/api/job/company`);
-            return data.data?.companies || [];
+            const { data } = await axios.get(`${job_service}/api/job/company`)
+            return data.data?.companies || []
         } catch (error) {
-            console.error('Error fetching companies:', error);
-            return [];
+            console.error('Error fetching companies:', error)
+            return []
         }
     }
 
     async function getAllRoles(): Promise<string[]> {
         try {
-            const { data } = await axios.get(`${job_service}/api/job/role`);
-            return data.data?.roles || [];
+            const { data } = await axios.get(`${job_service}/api/job/role`)
+            return data.data?.roles || []
         } catch (error) {
-            console.error('Error fetching roles:', error);
-            return [];
+            console.error('Error fetching roles:', error)
+            return []
         }
     }
 
     async function applyForJob(jobId: number) {
         try {
-            setBtnLoading(true);
+            setBtnLoading(true)
             const { data } = await axios.post(`${user_service}/api/user/apply/${jobId}`, {}, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            toast.success('Application submitted successfully!');
-            return { success: true, data: data.data };
+            })
+            toast.success('Application submitted successfully!')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to apply for job';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to apply for job'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
@@ -419,24 +419,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         try {
             const { data } = await axios.get(`${user_service}/api/user/applications/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            return data.data || [];
+            })
+            return data.data || []
         } catch (error) {
-            console.error('Error fetching applications:', error);
-            return [];
+            console.error('Error fetching applications:', error)
+            return []
         }
     }
 
     async function checkJobApplication(jobId: number): Promise<string> {
         try {
-            if (!isAuth || !token) return '';
+            if (!isAuth || !token) return ''
 
-            const applications = await getMyApplications();
-            const app = applications.find((app: any) => app.job_id === jobId);
-            return app?.status || '';
+            const applications = await getMyApplications()
+            const app = applications.find((app: any) => app.job_id === jobId)
+            return app?.status || ''
         } catch (error) {
-            console.error('Error checking job application:', error);
-            return '';
+            console.error('Error checking job application:', error)
+            return ''
         }
     }
 
@@ -444,38 +444,38 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         try {
             const { data } = await axios.get(`${job_service}/api/job/applications/${jobId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
-            });
-            return data.data?.applications || [];
+            })
+            return data.data?.applications || []
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to fetch applications';
-            console.error('Error fetching job applications:', error);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to fetch applications'
+            console.error('Error fetching job applications:', error)
+            throw new Error(message)
         }
     }
 
     async function updateApplicationStatus(applicationId: number, status: string) {
         try {
-            setBtnLoading(true);
-            const { data } = await axios.put(`${job_service}/api/job/application/${applicationId}`, 
-                { status }, 
+            setBtnLoading(true)
+            const { data } = await axios.put(`${job_service}/api/job/application/${applicationId}`,
+                { status },
                 {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }
-            );
-            toast.success('Application status updated successfully');
-            return { success: true, data: data.data };
+            )
+            toast.success('Application status updated successfully')
+            return { success: true, data: data.data }
         } catch (error: any) {
-            const message = error.response?.data?.message || 'Failed to update application status';
-            toast.error(message);
-            throw new Error(message);
+            const message = error.response?.data?.message || 'Failed to update application status'
+            toast.error(message)
+            throw new Error(message)
         } finally {
-            setBtnLoading(false);
+            setBtnLoading(false)
         }
     }
 
     useEffect(() => {
-        fetchUser(token as string);
-    }, []);
+        fetchUser(token as string)
+    }, [])
 
     const value = {
         user,
@@ -510,7 +510,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         getAllApplicationsForJob,
         updateApplicationStatus,
         refreshUser: () => fetchUser(token as string)
-    };
+    }
 
     return (
         <AppContext.Provider value={value}>
@@ -521,11 +521,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 }
 
 export const useAppData = (): AppContextType => {
-    const context = useContext(AppContext);
+    const context = useContext(AppContext)
     if (context === undefined) {
-        throw new Error("useAppData must be used within an AppProvider");
+        throw new Error("useAppData must be used within an AppProvider")
     }
-    return context;
+    return context
 }
 
-export default AppContext;
+export default AppContext

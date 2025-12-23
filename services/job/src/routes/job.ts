@@ -15,7 +15,7 @@ router.get('/', getAllJobs)
 router.get('/company', getAllCompany)
 router.get('/role', getAllRoles)
 router.get('/applications/:jobId', isAuth, getAllApplicationsForJob)
-router.get('/:jobId', isAuth, getJobDetails)
+router.get('/:jobId', getJobDetails)
 router.put('/application/:applicationId', isAuth, updateApplicationStatus)
 
 export default router
