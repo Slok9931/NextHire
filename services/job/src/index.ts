@@ -1,15 +1,30 @@
-import app from "./app.js"
-import dotenv from "dotenv"
-import { sql } from "./utils/db.js"
-import { connectKafka } from "./producer.js"
+import app from "./app.js";
+import dotenv from "dotenv";
+import { sql } from "./utils/db.js";
+import { connectKafka } from "./producer.js";
+import { createClient } from "redis";
 
-dotenv.config()
+dotenv.config();
 
-connectKafka()
+export const redisClient = createClient({
+  url: process.env.REDIS_URL,
+});
 
-async function initDB() { 
-    try {
-        await sql`
+redisClient
+  .connect()
+  .then(() => {
+    console.log("✅ Connected to Redis");
+  })
+  .catch((err: any) => {
+    console.log("❌ Redis connection error:", err);
+    process.exit(1); // Exit the process with an error code
+  });
+
+connectKafka();
+
+async function initDB() {
+  try {
+    await sql`
         DO $$
         BEGIN
             IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'job_type') THEN
@@ -23,8 +38,8 @@ async function initDB() {
             END IF;
         END
         $$;
-        `
-        await sql`
+        `;
+    await sql`
         CREATE TABLE IF NOT EXISTS companies (
             company_id SERIAL PRIMARY KEY,
             name VARCHAR(255) NOT NULL UNIQUE,
@@ -35,8 +50,8 @@ async function initDB() {
             recruiter_id INT NOT NULL,
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
-        `
-        await sql`
+        `;
+    await sql`
         CREATE TABLE IF NOT EXISTS jobs (
             job_id SERIAL PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
@@ -54,8 +69,8 @@ async function initDB() {
             created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             is_active BOOLEAN NOT NULL DEFAULT TRUE
         );
-        `
-        await sql`
+        `;
+    await sql`
         CREATE TABLE IF NOT EXISTS applications (
             application_id SERIAL PRIMARY KEY,
             job_id INT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
@@ -67,16 +82,16 @@ async function initDB() {
             applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE (job_id, applicant_id)
         );
-        `
-        console.log("✅ Database initialized successfully");
-    } catch (error) {
-        console.log("❌ Error initializing database:", error);
-        process.exit(1);
-    }
+        `;
+    console.log("✅ Database initialized successfully");
+  } catch (error) {
+    console.log("❌ Error initializing database:", error);
+    process.exit(1);
+  }
 }
 
 initDB().then(() => {
-    app.listen(process.env.PORT, () => {
-      console.log(`Job service is running on port ${process.env.PORT}`);
-    });
-})
+  app.listen(process.env.PORT, () => {
+    console.log(`Job service is running on port ${process.env.PORT}`);
+  });
+});

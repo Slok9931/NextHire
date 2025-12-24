@@ -4,8 +4,10 @@ import getBuffer from "../utils/buffer.js";
 import { sql } from "../utils/db.js";
 import ErrorHandler from "../utils/errorHandler.js";
 import { tryCatch } from "../utils/tryCatch.js";
-import { submitApplicationTemplate } from "../utils/template.js"
-import { publishToTopic } from "../producer.js"
+import { submitApplicationTemplate } from "../utils/template.js";
+import { publishToTopic } from "../producer.js";
+import { redisClient } from "../index.js";
+import { CacheService, CACHE_TTL } from "../utils/cache.js";
 
 export const myProfile = tryCatch(
   async (req: AuthenticatedRequest, res, next) => {
@@ -21,6 +23,19 @@ export const myProfile = tryCatch(
 export const getUserProfile = tryCatch(async (req, res, next) => {
   const { userId } = req.params;
 
+  const cacheKey = `user:profile:${userId}`;
+
+  // Try to get from cache first
+  const cachedUser = await redisClient.get(cacheKey);
+
+  if (cachedUser) {
+    return res.status(200).json({
+      success: true,
+      message: "User profile fetched successfully from cache",
+      data: JSON.parse(cachedUser),
+    });
+  }
+
   const users =
     await sql`SELECT u.user_id, u.name, u.email, u.phone_number, u.role, u.bio, u.resume, u.profile_pic, u.subscription, ARRAY_AGG(s.name) FILTER(WHERE s.name IS NOT NULL) as skills FROM users u LEFT JOIN user_skills us ON u.user_id = us.user_id LEFT JOIN skills s ON us.skill_id = s.skill_id WHERE u.user_id = ${userId} GROUP BY u.user_id`;
 
@@ -30,6 +45,9 @@ export const getUserProfile = tryCatch(async (req, res, next) => {
 
   const user = users[0];
   user.skills = user.skills || [];
+
+  // Cache the result for 30 minutes
+  await redisClient.setEx(cacheKey, 30 * 60, JSON.stringify(user));
 
   res.status(200).json({
     success: true,
@@ -50,6 +68,9 @@ export const updateUserProfile = tryCatch(
 
     const updatedUser =
       await sql`UPDATE users SET name = COALESCE(${name}, name), phone_number = COALESCE(${phone_number}, phone_number), bio = COALESCE(${bio}, bio) WHERE user_id = ${user.user_id} RETURNING user_id, name, email, phone_number, role, bio, resume, profile_pic, subscription`;
+
+    // Invalidate user profile cache using utility
+    await CacheService.invalidateUserProfile(user.user_id.toString());
 
     res.status(200).json({
       success: true,
@@ -89,6 +110,9 @@ export const updateProfilePicture = tryCatch(
     const [updatedUser] =
       await sql`UPDATE users SET profile_pic = ${uploadResult.url}, profile_pic_public_id = ${uploadResult.public_id} WHERE user_id = ${user.user_id} RETURNING user_id, name, email, phone_number, role, bio, resume, profile_pic, subscription`;
 
+    // Invalidate user profile cache using utility
+    await CacheService.invalidateUserProfile(user.user_id.toString());
+
     res.status(200).json({
       success: true,
       message: "Profile picture updated successfully",
@@ -126,6 +150,9 @@ export const updateResume = tryCatch(
 
     const [updatedUser] =
       await sql`UPDATE users SET resume = ${uploadResult.url}, resume_public_id = ${uploadResult.public_id} WHERE user_id = ${user.user_id} RETURNING user_id, name, email, phone_number, role, bio, resume, profile_pic, subscription`;
+
+    // Invalidate user profile cache
+    await redisClient.del(`user:profile:${user.user_id}`);
 
     res.status(200).json({
       success: true,
@@ -298,12 +325,12 @@ export const applyForJob = tryCatch(
       throw new ErrorHandler("Unauthorized", 401);
     }
 
-    if (user.role !== 'jobseeker') {
+    if (user.role !== "jobseeker") {
       throw new ErrorHandler("You are not allowed for this action", 403);
     }
 
     const resume = user.resume;
-    
+
     if (!resume) {
       throw new ErrorHandler("Please upload your resume before applying", 400);
     }
@@ -324,7 +351,8 @@ export const applyForJob = tryCatch(
       throw new ErrorHandler("Cannot apply to an inactive job", 400);
     }
 
-    const company = await sql`SELECT * FROM companies WHERE company_id = ${job[0].company_id}`;
+    const company =
+      await sql`SELECT * FROM companies WHERE company_id = ${job[0].company_id}`;
 
     const now = Date.now();
 
@@ -337,8 +365,9 @@ export const applyForJob = tryCatch(
     try {
       newApplication =
         await sql`INSERT INTO applications (job_id, applicant_id, applicant_email, resume, subscribed) VALUES (${jobId}, ${user.user_id}, ${user.email}, ${resume}, ${isSubscribed}) RETURNING *`;
-    } catch (error:any) {
-      if (error.code === "23505") { // unique_violation
+    } catch (error: any) {
+      if (error.code === "23505") {
+        // unique_violation
         throw new ErrorHandler("You have already applied for this job", 409);
       }
       throw error;
@@ -368,7 +397,7 @@ export const applyForJob = tryCatch(
       data: newApplication[0],
     });
   }
-)
+);
 
 export const getMyApplications = tryCatch(
   async (req: AuthenticatedRequest, res, next) => {
