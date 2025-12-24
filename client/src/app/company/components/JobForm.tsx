@@ -81,6 +81,42 @@ const JobForm: React.FC<JobFormProps> = ({
         setFormData(prev => ({ ...prev, [field]: value }))
     }
 
+    const formatBulletPoints = (text: string) => {
+        if (typeof text !== 'string') return text;
+        
+        const lines = text.split('\n').map(line => {
+            const trimmedLine = line.trim();
+            
+            if (!trimmedLine) return '';
+            
+            if (!trimmedLine.startsWith('•') && !trimmedLine.startsWith('-') && !trimmedLine.startsWith('*')) {
+                return `• ${trimmedLine}`;
+            }
+            
+            if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+                return `• ${trimmedLine.substring(2)}`;
+            }
+            
+            return trimmedLine;
+        });
+        
+        return lines.join('\n');
+    };
+
+    const handleBulletPointChange = (field: string, value: string) => {
+        const words = value.replace(/\n/g, ' ').split(' ').filter(word => word.length > 0);
+        const longestLine = value.split('\n').reduce((longest, line) => 
+            line.length > longest.length ? line : longest, ''
+        );
+        
+        if (longestLine.length > 150) {
+            return;
+        }
+        
+        const formattedValue = formatBulletPoints(value);
+        setFormData(prev => ({ ...prev, [field]: formattedValue }));
+    };
+
     const handleSubmit = async () => {
         // Validation
         const requiredFields = ['title', 'description', 'salary', 'location', 'role', 'responsibilities', 'qualifications']
@@ -256,25 +292,67 @@ const JobForm: React.FC<JobFormProps> = ({
                     {/* Responsibilities */}
                     <div className="space-y-2">
                         <Label htmlFor="responsibilities">Responsibilities *</Label>
-                        <Textarea
-                            id="responsibilities"
-                            value={formData.responsibilities}
-                            onChange={(e) => handleInputChange('responsibilities', e.target.value)}
-                            placeholder="• Develop and maintain applications&#10;• Collaborate with team members&#10;• Write clean, efficient code"
-                            className="min-h-24 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]"
-                        />
+                        <div className="space-y-1">
+                            <Textarea
+                                id="responsibilities"
+                                value={formData.responsibilities}
+                                onChange={(e) => handleBulletPointChange('responsibilities', e.target.value)}
+                                placeholder="• Develop and maintain applications&#10;• Collaborate with team members&#10;• Write clean, efficient code&#10;• Participate in code reviews"
+                                className="min-h-24 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const textarea = e.target as HTMLTextAreaElement;
+                                        const cursorPosition = textarea.selectionStart;
+                                        const textBefore = textarea.value.substring(0, cursorPosition);
+                                        const textAfter = textarea.value.substring(cursorPosition);
+                                        const newValue = textBefore + '\n• ' + textAfter;
+                                        handleBulletPointChange('responsibilities', newValue);
+                                        
+                                        // Set cursor position after the bullet point
+                                        setTimeout(() => {
+                                            textarea.selectionStart = textarea.selectionEnd = cursorPosition + 3;
+                                        }, 0);
+                                    }
+                                }}
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Use bullet points only. Press Enter to create a new bullet point.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Qualifications */}
                     <div className="space-y-2">
                         <Label htmlFor="qualifications">Qualifications *</Label>
-                        <Textarea
-                            id="qualifications"
-                            value={formData.qualifications}
-                            onChange={(e) => handleInputChange('qualifications', e.target.value)}
-                            placeholder="• Bachelor's degree in Computer Science&#10;• 3+ years of experience&#10;• Proficiency in React, Node.js"
-                            className="min-h-24 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]"
-                        />
+                        <div className="space-y-1">
+                            <Textarea
+                                id="qualifications"
+                                value={formData.qualifications}
+                                onChange={(e) => handleBulletPointChange('qualifications', e.target.value)}
+                                placeholder="• Bachelor's degree in Computer Science&#10;• 3+ years of experience&#10;• Proficiency in React, Node.js&#10;• Strong problem-solving skills"
+                                className="min-h-24 border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6]"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const textarea = e.target as HTMLTextAreaElement;
+                                        const cursorPosition = textarea.selectionStart;
+                                        const textBefore = textarea.value.substring(0, cursorPosition);
+                                        const textAfter = textarea.value.substring(cursorPosition);
+                                        const newValue = textBefore + '\n• ' + textAfter;
+                                        handleBulletPointChange('qualifications', newValue);
+                                        
+                                        // Set cursor position after the bullet point
+                                        setTimeout(() => {
+                                            textarea.selectionStart = textarea.selectionEnd = cursorPosition + 3;
+                                        }, 0);
+                                    }
+                                }}
+                            />
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                Use bullet points only. Press Enter to create a new bullet point.
+                            </p>
+                        </div>
                     </div>
 
                     {/* Active Status */}
