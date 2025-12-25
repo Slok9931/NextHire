@@ -4,12 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
-import { 
-    ArrowLeft, 
-    Loader2, 
-    MapPin, 
-    DollarSign, 
-    Users, 
+import {
+    ArrowLeft,
+    Loader2,
+    MapPin,
+    DollarSign,
+    Users,
     Clock,
     Briefcase,
     CheckCircle,
@@ -26,12 +26,12 @@ interface ReviewStepProps {
     loading: boolean
 }
 
-const ReviewStep: React.FC<ReviewStepProps> = ({ 
-    data, 
+const ReviewStep: React.FC<ReviewStepProps> = ({
+    data,
     company,
-    onSubmit, 
-    onPrevious, 
-    loading 
+    onSubmit,
+    onPrevious,
+    loading
 }) => {
     const formatSalary = (salary: string) => {
         const numericSalary = parseFloat(salary)
@@ -91,7 +91,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                         Job Posting Completion
                     </CardTitle>
                     <CardDescription>
-                        {allComplete 
+                        {allComplete
                             ? "Your job posting is complete and ready to publish!"
                             : "Please review the items below before publishing"
                         }
@@ -131,8 +131,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                     {company && (
                         <div className="flex items-center gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 shrink-0">
-                                <img 
-                                    src={company.logo} 
+                                <img
+                                    src={company.logo}
                                     alt={`${company.name} logo`}
                                     className="w-full h-full object-cover"
                                 />
@@ -224,7 +224,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                                     <h4 className="font-semibold mb-3">Required Skills</h4>
                                     <div className="flex flex-wrap gap-2">
                                         {data.skills_required.map((skill, index) => (
-                                            <Badge 
+                                            <Badge
                                                 key={index}
                                                 variant="secondary"
                                                 className="bg-[#ededff] dark:bg-[#00005f] text-[#2b2ed6]"
@@ -242,8 +242,8 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
 
             {/* Action Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     onClick={onPrevious}
                     disabled={loading}
                     className="gap-2 cursor-pointer"
@@ -255,7 +255,7 @@ const ReviewStep: React.FC<ReviewStepProps> = ({
                     <div className="text-sm text-gray-500">
                         Step 5 of 5
                     </div>
-                    <Button 
+                    <Button
                         onClick={onSubmit}
                         disabled={loading || !allComplete}
                         className="gap-2 cursor-pointer bg-[#494bd6] hover:bg-[#2b2ed6]"

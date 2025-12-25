@@ -22,18 +22,18 @@ interface RequirementsStepProps {
     onPrevious: () => void
 }
 
-const RequirementsStep: React.FC<RequirementsStepProps> = ({ 
-    data, 
-    onUpdate, 
-    onNext, 
-    onPrevious 
+const RequirementsStep: React.FC<RequirementsStepProps> = ({
+    data,
+    onUpdate,
+    onNext,
+    onPrevious
 }) => {
     const [currentQualification, setCurrentQualification] = useState('')
     const [skillInput, setSkillInput] = useState('')
     const [allSkills, setAllSkills] = useState<Skill[]>([])
     const [filteredSkills, setFilteredSkills] = useState<Skill[]>([])
     const [showSkillDropdown, setShowSkillDropdown] = useState(false)
-    
+
     const qualifications = data.qualifications
         ? data.qualifications.split('\n').filter(q => q.trim().startsWith('•')).map(q => q.replace('• ', '').trim())
         : []
@@ -152,7 +152,7 @@ const RequirementsStep: React.FC<RequirementsStepProps> = ({
                                 Qualifications & Skills
                             </h4>
                             <p className="text-xs text-blue-700 dark:text-blue-300">
-                                Define the essential requirements and preferred skills for this position. 
+                                Define the essential requirements and preferred skills for this position.
                                 This helps attract qualified candidates and sets clear expectations.
                             </p>
                         </div>
@@ -162,7 +162,7 @@ const RequirementsStep: React.FC<RequirementsStepProps> = ({
                 {/* Qualifications Section */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Qualifications & Requirements</h3>
-                    
+
                     {/* Add New Qualification */}
                     <div className="space-y-2">
                         <Label htmlFor="qualification" className="text-sm font-medium">
@@ -206,7 +206,7 @@ const RequirementsStep: React.FC<RequirementsStepProps> = ({
                             </Label>
                             <div className="space-y-2">
                                 {qualifications.map((qualification, index) => (
-                                    <div 
+                                    <div
                                         key={index}
                                         className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md group"
                                     >
@@ -237,16 +237,16 @@ const RequirementsStep: React.FC<RequirementsStepProps> = ({
                                     .filter(suggestion => !qualifications.includes(suggestion))
                                     .slice(0, 6)
                                     .map((suggestion, index) => (
-                                    <Button
-                                        key={index}
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => addSuggestion(suggestion)}
-                                        className="text-xs h-auto py-2 px-3 cursor-pointer border-[#d0d0ff] dark:border-[#0000c5] hover:bg-[#ededff] dark:hover:bg-[#000040] hover:border-[#494bd6]"
-                                    >
-                                        + {suggestion}
-                                    </Button>
-                                ))}
+                                        <Button
+                                            key={index}
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => addSuggestion(suggestion)}
+                                            className="text-xs h-auto py-2 px-3 cursor-pointer border-[#d0d0ff] dark:border-[#0000c5] hover:bg-[#ededff] dark:hover:bg-[#000040] hover:border-[#494bd6]"
+                                        >
+                                            + {suggestion}
+                                        </Button>
+                                    ))}
                             </div>
                         </div>
                     )}
@@ -255,7 +255,7 @@ const RequirementsStep: React.FC<RequirementsStepProps> = ({
                 {/* Skills Section */}
                 <div className="space-y-4">
                     <h3 className="text-lg font-medium">Required Skills (Optional)</h3>
-                    
+
                     {/* Selected Skills */}
                     {data.skills_required.length > 0 && (
                         <div className="space-y-2">
@@ -334,8 +334,8 @@ const RequirementsStep: React.FC<RequirementsStepProps> = ({
 
             {/* Action Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     onClick={onPrevious}
                     className="gap-2 cursor-pointer"
                 >
@@ -346,7 +346,7 @@ const RequirementsStep: React.FC<RequirementsStepProps> = ({
                     <div className="text-sm text-gray-500">
                         Step 4 of 5
                     </div>
-                    <Button 
+                    <Button
                         onClick={handleNext}
                         disabled={!isValid}
                         className="gap-2 cursor-pointer bg-[#494bd6] hover:bg-[#2b2ed6]"

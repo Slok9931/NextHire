@@ -19,8 +19,8 @@ const JobDetailsStep: React.FC<JobDetailsStepProps> = ({ data, onUpdate, onNext,
         onUpdate({ [field]: value })
     }
 
-    const isValid = !!(data.salary && data.location && data.openings && 
-                      parseFloat(data.salary) > 0 && parseInt(data.openings) > 0)
+    const isValid = !!(data.salary && data.location && data.openings &&
+        parseFloat(data.salary) > 0 && parseInt(data.openings) > 0)
 
     const handleNext = () => {
         if (isValid) {
@@ -106,8 +106,8 @@ const JobDetailsStep: React.FC<JobDetailsStepProps> = ({ data, onUpdate, onNext,
                         <Label htmlFor="job_type" className="text-sm font-medium">
                             Employment Type
                         </Label>
-                        <Select 
-                            value={data.job_type} 
+                        <Select
+                            value={data.job_type}
                             onValueChange={(value) => handleInputChange('job_type', value)}
                         >
                             <SelectTrigger className="border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6] w-full">
@@ -126,8 +126,8 @@ const JobDetailsStep: React.FC<JobDetailsStepProps> = ({ data, onUpdate, onNext,
                         <Label htmlFor="work_location" className="text-sm font-medium">
                             Work Arrangement
                         </Label>
-                        <Select 
-                            value={data.work_location} 
+                        <Select
+                            value={data.work_location}
                             onValueChange={(value) => handleInputChange('work_location', value)}
                         >
                             <SelectTrigger className="border-[#d0d0ff] dark:border-[#0000c5] focus:border-[#494bd6] w-full">
@@ -159,8 +159,8 @@ const JobDetailsStep: React.FC<JobDetailsStepProps> = ({ data, onUpdate, onNext,
 
             {/* Action Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     onClick={onPrevious}
                     className="gap-2 cursor-pointer"
                 >
@@ -171,7 +171,7 @@ const JobDetailsStep: React.FC<JobDetailsStepProps> = ({ data, onUpdate, onNext,
                     <div className="text-sm text-gray-500">
                         Step 2 of 5
                     </div>
-                    <Button 
+                    <Button
                         onClick={handleNext}
                         disabled={!isValid}
                         className="gap-2 cursor-pointer bg-[#494bd6] hover:bg-[#2b2ed6]"

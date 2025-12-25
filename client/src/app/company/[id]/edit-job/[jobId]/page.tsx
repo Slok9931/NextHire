@@ -21,7 +21,7 @@ const EditJobPage = () => {
     const { id, jobId } = useParams()
     const router = useRouter()
     const { user, getCompanyDetails, getJobDetails, updateJob, btnLoading } = useAppData()
-    
+
     const [company, setCompany] = useState<Company | null>(null)
     const [job, setJob] = useState<Job | null>(null)
     const [loading, setLoading] = useState(true)
@@ -63,12 +63,12 @@ const EditJobPage = () => {
                 getCompanyDetails(Number(id)),
                 getJobDetails ? getJobDetails(Number(jobId)) : null
             ])
-            
+
             if (!companyData) {
                 router.push('/jobs')
                 return
             }
-            
+
             // Check if user is the owner
             if (!user || Number(user.user_id) !== companyData.recruiter_id) {
                 router.push(`/company/${id}`)
@@ -77,15 +77,15 @@ const EditJobPage = () => {
 
             // Find job in company jobs if getJobDetails is not available
             const jobToEdit = jobData || companyData.jobs?.find((j: Job) => j.job_id === Number(jobId))
-            
+
             if (!jobToEdit) {
                 router.push(`/company/${id}`)
                 return
             }
-            
+
             setCompany(companyData)
             setJob(jobToEdit)
-            
+
             // Populate form data
             setFormData({
                 title: jobToEdit.title || '',
@@ -258,8 +258,8 @@ const EditJobPage = () => {
                 {/* Header */}
                 <div className="mb-8">
                     <div className="flex items-center gap-4 mb-6">
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             onClick={() => router.push(`/company/${id}`)}
                             className="gap-2 text-[#494bd6] hover:text-[#2b2ed6] cursor-pointer"
                         >
@@ -271,8 +271,8 @@ const EditJobPage = () => {
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center gap-3 mb-4">
                             <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0">
-                                <img 
-                                    src={company.logo} 
+                                <img
+                                    src={company.logo}
                                     alt={`${company.name} logo`}
                                     className="w-full h-full object-cover"
                                 />
@@ -300,8 +300,8 @@ const EditJobPage = () => {
                                         {Math.round((currentStep / totalSteps) * 100)}% Complete
                                     </span>
                                 </div>
-                                <Progress 
-                                    value={(currentStep / totalSteps) * 100} 
+                                <Progress
+                                    value={(currentStep / totalSteps) * 100}
                                     className="h-2 bg-gray-200 dark:bg-gray-700"
                                 />
                             </div>
@@ -313,21 +313,20 @@ const EditJobPage = () => {
                                     const isCompleted = stepNumber < currentStep
                                     const isCurrent = stepNumber === currentStep
                                     const isAccessible = stepNumber <= currentStep || stepNumber === currentStep + 1
-                                    
+
                                     return (
-                                        <div 
+                                        <div
                                             key={stepNumber}
-                                            className={`flex flex-col items-center cursor-pointer transition-all duration-200 ${
-                                                isAccessible ? 'opacity-100' : 'opacity-50 cursor-not-allowed'
-                                            }`}
+                                            className={`flex flex-col items-center cursor-pointer transition-all duration-200 ${isAccessible ? 'opacity-100' : 'opacity-50 cursor-not-allowed'
+                                                }`}
                                             onClick={() => isAccessible && handleStepClick(stepNumber)}
                                         >
                                             <div className={`
                                                 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium mb-2 transition-all duration-200
-                                                ${isCompleted 
-                                                    ? 'bg-green-500 text-white' 
-                                                    : isCurrent 
-                                                        ? 'bg-[#494bd6] text-white' 
+                                                ${isCompleted
+                                                    ? 'bg-green-500 text-white'
+                                                    : isCurrent
+                                                        ? 'bg-[#494bd6] text-white'
                                                         : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
                                                 }
                                                 ${isAccessible ? 'hover:scale-110' : ''}
@@ -336,8 +335,8 @@ const EditJobPage = () => {
                                             </div>
                                             <span className={`
                                                 text-xs text-center max-w-16 leading-tight
-                                                ${isCurrent 
-                                                    ? 'text-[#494bd6] font-medium' 
+                                                ${isCurrent
+                                                    ? 'text-[#494bd6] font-medium'
                                                     : 'text-gray-500 dark:text-gray-400'
                                                 }
                                             `}>

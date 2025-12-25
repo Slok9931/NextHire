@@ -13,14 +13,14 @@ interface ResponsibilitiesStepProps {
     onPrevious: () => void
 }
 
-const ResponsibilitiesStep: React.FC<ResponsibilitiesStepProps> = ({ 
-    data, 
-    onUpdate, 
-    onNext, 
-    onPrevious 
+const ResponsibilitiesStep: React.FC<ResponsibilitiesStepProps> = ({
+    data,
+    onUpdate,
+    onNext,
+    onPrevious
 }) => {
     const [currentResponsibility, setCurrentResponsibility] = useState('')
-    
+
     const responsibilities = data.responsibilities
         ? data.responsibilities.split('\n').filter(r => r.trim().startsWith('•')).map(r => r.replace('• ', '').trim())
         : []
@@ -86,7 +86,7 @@ const ResponsibilitiesStep: React.FC<ResponsibilitiesStepProps> = ({
                                 Key Responsibilities
                             </h4>
                             <p className="text-xs text-blue-700 dark:text-blue-300">
-                                List the main tasks and duties this role will involve. Be specific and action-oriented. 
+                                List the main tasks and duties this role will involve. Be specific and action-oriented.
                                 Include at least 3-5 key responsibilities.
                             </p>
                         </div>
@@ -136,7 +136,7 @@ const ResponsibilitiesStep: React.FC<ResponsibilitiesStepProps> = ({
                         </Label>
                         <div className="space-y-2">
                             {responsibilities.map((responsibility, index) => (
-                                <div 
+                                <div
                                     key={index}
                                     className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-md group"
                                 >
@@ -170,16 +170,16 @@ const ResponsibilitiesStep: React.FC<ResponsibilitiesStepProps> = ({
                                 .filter(suggestion => !responsibilities.includes(suggestion))
                                 .slice(0, 6)
                                 .map((suggestion, index) => (
-                                <Button
-                                    key={index}
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => addSuggestion(suggestion)}
-                                    className="text-xs h-auto py-2 px-3 cursor-pointer border-[#d0d0ff] dark:border-[#0000c5] hover:bg-[#ededff] dark:hover:bg-[#000040] hover:border-[#494bd6]"
-                                >
-                                    + {suggestion}
-                                </Button>
-                            ))}
+                                    <Button
+                                        key={index}
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => addSuggestion(suggestion)}
+                                        className="text-xs h-auto py-2 px-3 cursor-pointer border-[#d0d0ff] dark:border-[#0000c5] hover:bg-[#ededff] dark:hover:bg-[#000040] hover:border-[#494bd6]"
+                                    >
+                                        + {suggestion}
+                                    </Button>
+                                ))}
                         </div>
                     </div>
                 )}
@@ -187,8 +187,8 @@ const ResponsibilitiesStep: React.FC<ResponsibilitiesStepProps> = ({
 
             {/* Action Buttons */}
             <div className="flex justify-between pt-6 border-t border-gray-200 dark:border-gray-700">
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     onClick={onPrevious}
                     className="gap-2 cursor-pointer"
                 >
@@ -199,7 +199,7 @@ const ResponsibilitiesStep: React.FC<ResponsibilitiesStepProps> = ({
                     <div className="text-sm text-gray-500">
                         Step 3 of 5
                     </div>
-                    <Button 
+                    <Button
                         onClick={handleNext}
                         disabled={!isValid}
                         className="gap-2 cursor-pointer bg-[#494bd6] hover:bg-[#2b2ed6]"

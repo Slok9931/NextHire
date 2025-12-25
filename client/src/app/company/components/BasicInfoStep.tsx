@@ -92,7 +92,7 @@ const BasicInfoStep: React.FC<BasicInfoStepProps> = ({ data, onUpdate, onNext })
                 <div className="text-sm text-gray-500">
                     Step 1 of 5
                 </div>
-                <Button 
+                <Button
                     onClick={handleNext}
                     disabled={!isValid}
                     className="gap-2 cursor-pointer bg-[#494bd6] hover:bg-[#2b2ed6]"

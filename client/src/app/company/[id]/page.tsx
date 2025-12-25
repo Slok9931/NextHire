@@ -6,15 +6,15 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
-import { 
-    Building2, 
-    Globe, 
-    Calendar, 
-    MapPin, 
-    DollarSign, 
-    Users, 
-    Briefcase, 
-    Clock, 
+import {
+    Building2,
+    Globe,
+    Calendar,
+    MapPin,
+    DollarSign,
+    Users,
+    Briefcase,
+    Clock,
     ExternalLink,
     ArrowLeft,
     Plus,
@@ -29,14 +29,14 @@ import Loading from '@/components/loading'
 const CompanyPage = () => {
     const { id } = useParams()
     const router = useRouter()
-    const { 
-        user, 
-        getCompanyDetails, 
-        updateJob, 
-        toggleJobStatus, 
-        btnLoading 
+    const {
+        user,
+        getCompanyDetails,
+        updateJob,
+        toggleJobStatus,
+        btnLoading
     } = useAppData()
-    
+
     const [company, setCompany] = useState<Company | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
@@ -54,12 +54,12 @@ const CompanyPage = () => {
             setLoading(true)
             setError('')
             const companyData = await getCompanyDetails(Number(id))
-            
+
             if (!companyData) {
                 setError('Company not found')
                 return
             }
-            
+
             setCompany(companyData)
         } catch (error) {
             console.error('Error fetching company data:', error)
@@ -71,7 +71,7 @@ const CompanyPage = () => {
 
     const handleUpdateJob = async (jobData: any) => {
         if (!editingJob) return
-        
+
         try {
             await updateJob(editingJob.job_id, jobData)
             setEditingJob(null)
@@ -166,8 +166,8 @@ const CompanyPage = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Back Button */}
                     <div className="mb-6">
-                        <Button 
-                            variant="ghost" 
+                        <Button
+                            variant="ghost"
                             onClick={() => router.back()}
                             className="gap-2 text-[#494bd6] hover:text-[#2b2ed6] cursor-pointer"
                         >
@@ -181,8 +181,8 @@ const CompanyPage = () => {
                         <CardContent className="p-8">
                             <div className="flex flex-col md:flex-row gap-6">
                                 <div className="w-32 h-32 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 mx-auto md:mx-0">
-                                    <img 
-                                        src={company.logo} 
+                                    <img
+                                        src={company.logo}
                                         alt={`${company.name} logo`}
                                         className="w-full h-full object-cover"
                                     />
@@ -201,7 +201,7 @@ const CompanyPage = () => {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <Globe size={16} />
-                                            <a 
+                                            <a
                                                 href={company.website}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
@@ -231,8 +231,8 @@ const CompanyPage = () => {
                                         {isOwner ? 'Job Positions' : 'Open Positions'}
                                     </CardTitle>
                                     <CardDescription>
-                                        {isOwner 
-                                            ? 'Manage your job postings and applications' 
+                                        {isOwner
+                                            ? 'Manage your job postings and applications'
                                             : `Discover career opportunities at ${company.name}`
                                         }
                                     </CardDescription>
@@ -253,7 +253,7 @@ const CompanyPage = () => {
                                         {isOwner ? 'No jobs posted yet' : 'No open positions'}
                                     </h3>
                                     <p className="text-gray-500 mb-4">
-                                        {isOwner 
+                                        {isOwner
                                             ? 'Start by creating your first job posting'
                                             : `${company.name} doesn't have any job openings at the moment. Check back later!`
                                         }
@@ -268,7 +268,7 @@ const CompanyPage = () => {
                             ) : (
                                 <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                                     {(isOwner ? jobs : activeJobs).map((job: Job) => (
-                                        <Card 
+                                        <Card
                                             key={job.job_id}
                                             className="border-[#d0d0ff] dark:border-[#0000c5] hover:shadow-lg transition-all duration-300 hover:border-[#494bd6] group cursor-pointer"
                                             onClick={() => handleJobCardClick(job)}
