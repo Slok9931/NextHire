@@ -23,7 +23,50 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const [btnLoading, setBtnLoading] = useState<boolean>(false)
     const [isAuth, setIsAuth] = useState<boolean>(false)
 
+    // Cache state
+    const [applicationCache, setApplicationCache] = useState<{ [key: number]: any }>({})
+    const [myApplicationsCache, setMyApplicationsCache] = useState<any>(null)
+    const [cacheTimestamps, setCacheTimestamps] = useState<{ [key: string]: number }>({})
+
     const token = Cookies.get("token")
+
+    // Cache utilities
+    const isCacheValid = (key: string, maxAgeMinutes: number = 5): boolean => {
+        const timestamp = cacheTimestamps[key]
+        if (!timestamp) return false
+        return Date.now() - timestamp < maxAgeMinutes * 60 * 1000
+    }
+
+    const setCacheWithTimestamp = (key: string, data: any) => {
+        if (key.startsWith('applications:')) {
+            const jobId = parseInt(key.split(':')[1])
+            setApplicationCache(prev => ({ ...prev, [jobId]: data }))
+        } else if (key === 'myApplications') {
+            setMyApplicationsCache(data)
+        }
+        setCacheTimestamps(prev => ({ ...prev, [key]: Date.now() }))
+    }
+
+    const invalidateCache = (pattern: string) => {
+        if (pattern === 'applications:*') {
+            setApplicationCache({})
+            setCacheTimestamps(prev => {
+                const filtered = Object.keys(prev).reduce((acc, key) => {
+                    if (!key.startsWith('applications:')) {
+                        acc[key] = prev[key]
+                    }
+                    return acc
+                }, {} as { [key: string]: number })
+                return filtered
+            })
+        } else if (pattern === 'myApplications') {
+            setMyApplicationsCache(null)
+            setCacheTimestamps(prev => {
+                const { myApplications, ...rest } = prev
+                return rest
+            })
+        }
+    }
 
     async function fetchUser(token: string) {
         if (!token) {
@@ -261,6 +304,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         work_location: string
         company_id: number
         openings: number
+        skills_required?: string[]
     }) {
         try {
             setBtnLoading(true)
@@ -290,6 +334,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         work_location: string
         openings: number
         is_active: boolean
+        skills_required?: string[]
     }) {
         try {
             setBtnLoading(true)
@@ -408,6 +453,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
             const { data } = await axios.post(`${user_service}/api/user/apply/${jobId}`, {}, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
+
+            // Invalidate relevant caches
+            invalidateCache('myApplications')
+            invalidateCache(`applications:${jobId}`)
+
             toast.success('Application submitted successfully!')
             return { success: true, data: data.data }
         } catch (error: any) {
@@ -421,10 +471,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     async function getMyApplications() {
         try {
+            // Check cache first
+            if (myApplicationsCache && isCacheValid('myApplications', 5)) {
+                return myApplicationsCache
+            }
+
             const { data } = await axios.get(`${user_service}/api/user/applications/me`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-            return data.data || []
+
+            const applications = data.data || []
+            setCacheWithTimestamp('myApplications', applications)
+            return applications
         } catch (error) {
             console.error('Error fetching applications:', error)
             return []
@@ -446,10 +504,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
     async function getAllApplicationsForJob(jobId: number) {
         try {
+            // Check cache first
+            const cacheKey = `applications:${jobId}`
+            if (applicationCache[jobId] && isCacheValid(cacheKey, 3)) {
+                return applicationCache[jobId]
+            }
+
             const { data } = await axios.get(`${job_service}/api/job/applications/${jobId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-            return data.data?.applications || []
+
+            const applications = data.data?.applications || []
+            setCacheWithTimestamp(cacheKey, applications)
+            return applications
         } catch (error: any) {
             const message = error.response?.data?.message || 'Failed to fetch applications'
             console.error('Error fetching job applications:', error)
@@ -466,6 +533,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                     headers: { 'Authorization': `Bearer ${token}` }
                 }
             )
+
+            // Invalidate applications cache
+            invalidateCache('applications:*')
+
             toast.success('Application status updated successfully')
             return { success: true, data: data.data }
         } catch (error: any) {
@@ -475,6 +546,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         } finally {
             setBtnLoading(false)
         }
+    }
+
+    // Cache management function
+    const clearApplicationsCache = () => {
+        invalidateCache('applications:*')
+        invalidateCache('myApplications')
     }
 
     useEffect(() => {
@@ -513,6 +590,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         checkJobApplication,
         getAllApplicationsForJob,
         updateApplicationStatus,
+        clearApplicationsCache,
         refreshUser: () => fetchUser(token as string)
     }
 

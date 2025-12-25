@@ -71,6 +71,12 @@ async function initDB() {
         );
         `;
     await sql`
+        CREATE TABLE IF NOT EXISTS skills (
+            skill_id SERIAL PRIMARY KEY,
+            name VARCHAR(100) NOT NULL UNIQUE
+        );
+        `;
+    await sql`
         CREATE TABLE IF NOT EXISTS applications (
             application_id SERIAL PRIMARY KEY,
             job_id INT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
@@ -81,6 +87,13 @@ async function initDB() {
             subscribed BOOLEAN NOT NULL DEFAULT TRUE,
             applied_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
             UNIQUE (job_id, applicant_id)
+        );
+        `;
+    await sql`
+        CREATE TABLE IF NOT EXISTS job_skills (
+            job_id INT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
+            skill_id INT NOT NULL REFERENCES skills(skill_id) ON DELETE CASCADE,
+            PRIMARY KEY (job_id, skill_id)
         );
         `;
     console.log("✅ Database initialized successfully");

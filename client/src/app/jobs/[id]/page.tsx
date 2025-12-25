@@ -24,13 +24,15 @@ import {
     Eye,
     AlertTriangle,
     UserCheck,
-    XCircle
+    XCircle,
+    Award
 } from 'lucide-react'
 import { useAppData } from '@/context/AppContext'
 import { Job } from '@/type'
 import Loading from '@/components/loading'
 import toast from 'react-hot-toast'
 import ApplicationsTab from './components/ApplicationsTab'
+import SkillMatchComponent from '@/components/SkillMatch'
 
 const JobPage = () => {
     const { id } = useParams()
@@ -604,6 +606,34 @@ const JobPage = () => {
                                         </ul>
                                     </CardContent>
                                 </Card>
+
+                                {/* Required Skills - Show for all users if skills exist */}
+                                {job.skills_required && job.skills_required.length > 0 && (
+                                    <Card className="shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
+                                        <CardHeader>
+                                            <CardTitle className="text-lg flex items-center gap-2">
+                                                <Award className="text-[#494bd6]" size={20} />
+                                                Required Skills
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Skills needed for this position
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="flex flex-wrap gap-2">
+                                                {job.skills_required.map((skill, index) => (
+                                                    <Badge
+                                                        key={index}
+                                                        variant="outline"
+                                                        className="bg-[#ededff] dark:bg-[#00005f] text-[#2b2ed6] border border-[#b0b0ff] dark:border-[#0000c5]"
+                                                    >
+                                                        {skill}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                )}
                             </div>
 
                             {/* Sidebar */}
@@ -654,6 +684,17 @@ const JobPage = () => {
                                     </CardContent>
                                 </Card>
 
+                                {/* Skill Match Analysis - For job seekers only */}
+                                {isAuth && user?.role === 'jobseeker' && job.skills_required && job.skills_required.length > 0 && (
+                                    <SkillMatchComponent
+                                        userSkills={user.skills || []}
+                                        jobSkills={job.skills_required}
+                                        variant="card"
+                                        showDetails={true}
+                                        className="shadow-lg"
+                                    />
+                                )}
+
                                 {/* Company Quick Info */}
                                 {job.company_name && (
                                     <Card className="shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
@@ -692,26 +733,6 @@ const JobPage = () => {
                                                     Company Website
                                                 </Button>
                                             )}
-                                        </CardContent>
-                                    </Card>
-                                )}
-
-                                {/* Similar Jobs CTA */}
-                                {!isJobOwner && (
-                                    <Card className="shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-linear-to-br from-[#ededff] to-[#f0f8ff] dark:from-gray-800 dark:to-gray-700">
-                                        <CardContent className="p-6 text-center">
-                                            <Briefcase className="mx-auto text-[#494bd6] mb-3" size={32} />
-                                            <h4 className="font-semibold mb-2">Find Similar Jobs</h4>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                                Explore more opportunities in {job.role}
-                                            </p>
-                                            <Button
-                                                variant="outline"
-                                                className="w-full cursor-pointer"
-                                                onClick={() => router.push(`/jobs?role=${encodeURIComponent(job.role)}`)}
-                                            >
-                                                Browse Similar Jobs
-                                            </Button>
                                         </CardContent>
                                     </Card>
                                 )}

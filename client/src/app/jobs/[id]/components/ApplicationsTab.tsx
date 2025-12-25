@@ -20,7 +20,8 @@ import {
     Loader2,
     ExternalLink,
     Crown,
-    Star
+    Star,
+    RefreshCw
 } from 'lucide-react'
 import { useAppData } from '@/context/AppContext'
 import { JobApplication } from '@/type'
@@ -33,7 +34,7 @@ interface ApplicationsTabProps {
 }
 
 const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
-    const { getAllApplicationsForJob, updateApplicationStatus } = useAppData()
+    const { getAllApplicationsForJob, updateApplicationStatus, clearApplicationsCache } = useAppData()
 
     const [applications, setApplications] = useState<JobApplication[]>([])
     const [loading, setLoading] = useState(true)
@@ -42,6 +43,7 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
     const [subscriptionFilter, setSubscriptionFilter] = useState<'all' | 'subscribed' | 'free'>('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [updatingStatus, setUpdatingStatus] = useState<{ [key: number]: 'hired' | 'rejected' | null }>({})
+    const [refreshing, setRefreshing] = useState(false)
 
     useEffect(() => {
         fetchApplications()
@@ -63,12 +65,30 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
         }
     }
 
+    const refreshApplications = async () => {
+        try {
+            setRefreshing(true)
+            clearApplicationsCache() // Clear cache to force fresh data
+            const applicationsData = await getAllApplicationsForJob(jobId)
+            setApplications(applicationsData)
+        } catch (error) {
+            console.error('Error refreshing applications:', error)
+        } finally {
+            setRefreshing(false)
+        }
+    }
+
     const handleStatusUpdate = async (applicationId: number, newStatus: 'hired' | 'rejected') => {
         try {
             setUpdatingStatus(prev => ({ ...prev, [applicationId]: newStatus }))
             await updateApplicationStatus(applicationId, newStatus)
-            // Refresh applications after successful update
-            await fetchApplications()
+
+            // Update local state instead of refetching all applications
+            setApplications(prev => prev.map(app =>
+                app.application_id === applicationId
+                    ? { ...app, status: newStatus }
+                    : app
+            ))
         } catch (error) {
             console.error('Error updating application status:', error)
         } finally {
@@ -349,6 +369,18 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                 Manage and review job applications for this position. Premium users are shown first.
                             </CardDescription>
                         </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                onClick={refreshApplications}
+                                disabled={refreshing}
+                                size="sm"
+                                variant="outline"
+                                className="flex items-center gap-2"
+                            >
+                                <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+                                {refreshing ? "Refreshing..." : "Refresh"}
+                            </Button>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -398,8 +430,8 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
 
                                         <Card
                                             className={`border-[#d0d0ff] dark:border-[#0000c5] hover:shadow-md transition-all duration-200 ${isPremium
-                                                    ? 'ring-2 ring-yellow-200 dark:ring-yellow-800 bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20'
-                                                    : ''
+                                                ? 'ring-2 ring-yellow-200 dark:ring-yellow-800 bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20'
+                                                : ''
                                                 }`}
                                         >
                                             <CardContent className="p-6">
@@ -407,8 +439,8 @@ const ApplicationsTab: React.FC<ApplicationsTabProps> = ({ jobId }) => {
                                                     <div className="relative">
                                                         <Avatar className="w-12 h-12 shrink-0">
                                                             <AvatarFallback className={`text-white font-semibold ${isPremium
-                                                                    ? 'bg-linear-to-r from-yellow-400 to-orange-500'
-                                                                    : 'bg-[#494bd6]'
+                                                                ? 'bg-linear-to-r from-yellow-400 to-orange-500'
+                                                                : 'bg-[#494bd6]'
                                                                 }`}>
                                                                 {getInitials(application.applicant_name)}
                                                             </AvatarFallback>

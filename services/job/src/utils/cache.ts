@@ -64,6 +64,20 @@ export class CacheService {
   }
 
   /**
+   * Invalidate application-related caches
+   */
+  static async invalidateApplicationCaches(): Promise<void> {
+    await this.delPattern("job:applications:*");
+  }
+
+  /**
+   * Invalidate specific job application cache
+   */
+  static async invalidateJobApplicationCache(jobId: number): Promise<void> {
+    await this.del(`job:applications:${jobId}`);
+  }
+
+  /**
    * Invalidate specific company cache
    */
   static async invalidateCompanyCache(

@@ -132,7 +132,13 @@ export const createJob = tryCatch(async (req: AuthenticatedRequest, res) => {
     work_location,
     company_id,
     openings,
+    skills_required,
   } = req.body;
+
+  console.log(
+    "Received job creation request:",
+    JSON.stringify(req.body, null, 2)
+  );
 
   if (
     !title ||
@@ -161,23 +167,66 @@ export const createJob = tryCatch(async (req: AuthenticatedRequest, res) => {
     );
   }
 
-  const result = await sql`
+  try {
+    await sql`BEGIN`;
+
+    const result = await sql`
         INSERT INTO jobs (title, description, location, salary, role, responsibilities, qualifications, job_type, work_location, company_id, posted_by_recruiter_id, openings)
         VALUES (${title}, ${description}, ${location}, ${salary}, ${role}, ${responsibilities}, ${qualifications}, ${job_type}, ${work_location}, ${company_id}, ${user.user_id}, ${openings})
         RETURNING *
     `;
 
-  // Invalidate caches using utility
-  await CacheService.invalidateJobCaches();
-  await CacheService.del(`company:details:${company_id}`);
+    const jobId = result[0].job_id;
 
-  res.status(200).json({
-    status: "success",
-    message: "Job created successfully.",
-    data: {
-      job: result[0],
-    },
-  });
+    // Handle skills if provided
+    if (
+      skills_required &&
+      Array.isArray(skills_required) &&
+      skills_required.length > 0
+    ) {
+      for (const skillName of skills_required) {
+        if (skillName && skillName.trim()) {
+          // Find or create skill
+          let skillId;
+          const existingSkill = await sql`
+            SELECT skill_id FROM skills WHERE LOWER(name) = LOWER(${skillName.trim()})
+          `;
+
+          if (existingSkill.length > 0) {
+            skillId = existingSkill[0].skill_id;
+          } else {
+            const [newSkill] = await sql`
+              INSERT INTO skills (name) VALUES (${skillName.trim()}) RETURNING skill_id
+            `;
+            skillId = newSkill.skill_id;
+          }
+
+          // Link job with skill
+          await sql`
+            INSERT INTO job_skills (job_id, skill_id) VALUES (${jobId}, ${skillId})
+            ON CONFLICT (job_id, skill_id) DO NOTHING
+          `;
+        }
+      }
+    }
+
+    await sql`COMMIT`;
+
+    // Invalidate caches using utility
+    await CacheService.invalidateJobCaches();
+    await CacheService.del(`company:details:${company_id}`);
+
+    res.status(200).json({
+      status: "success",
+      message: "Job created successfully.",
+      data: {
+        job: result[0],
+      },
+    });
+  } catch (error) {
+    await sql`ROLLBACK`;
+    throw error;
+  }
 });
 
 export const updateJob = tryCatch(async (req: AuthenticatedRequest, res) => {
@@ -199,6 +248,7 @@ export const updateJob = tryCatch(async (req: AuthenticatedRequest, res) => {
     work_location,
     openings,
     is_active,
+    skills_required,
   } = req.body;
 
   const job = await sql`
@@ -212,7 +262,10 @@ export const updateJob = tryCatch(async (req: AuthenticatedRequest, res) => {
     );
   }
 
-  const updatedJob = await sql`
+  try {
+    await sql`BEGIN`;
+
+    const updatedJob = await sql`
         UPDATE jobs
         SET title = ${title},
             description = ${description},
@@ -229,17 +282,57 @@ export const updateJob = tryCatch(async (req: AuthenticatedRequest, res) => {
         RETURNING *
     `;
 
-  // Invalidate caches using utility
-  await CacheService.invalidateJobCaches();
-  await CacheService.del(`company:details:${job[0].company_id}`);
+    // Update job skills if provided
+    if (skills_required !== undefined) {
+      // First, remove all existing skills for this job
+      await sql`DELETE FROM job_skills WHERE job_id = ${jobId}`;
 
-  res.status(200).json({
-    status: "success",
-    message: "Job updated successfully.",
-    data: {
-      job: updatedJob[0],
-    },
-  });
+      // Then add new skills if any
+      if (Array.isArray(skills_required) && skills_required.length > 0) {
+        for (const skillName of skills_required) {
+          if (skillName && skillName.trim()) {
+            // Find or create skill
+            let skillId;
+            const existingSkill = await sql`
+              SELECT skill_id FROM skills WHERE LOWER(name) = LOWER(${skillName.trim()})
+            `;
+
+            if (existingSkill.length > 0) {
+              skillId = existingSkill[0].skill_id;
+            } else {
+              const [newSkill] = await sql`
+                INSERT INTO skills (name) VALUES (${skillName.trim()}) RETURNING skill_id
+              `;
+              skillId = newSkill.skill_id;
+            }
+
+            // Link job with skill
+            await sql`
+              INSERT INTO job_skills (job_id, skill_id) VALUES (${jobId}, ${skillId})
+              ON CONFLICT (job_id, skill_id) DO NOTHING
+            `;
+          }
+        }
+      }
+    }
+
+    await sql`COMMIT`;
+
+    // Invalidate caches using utility
+    await CacheService.invalidateJobCaches();
+    await CacheService.del(`company:details:${job[0].company_id}`);
+
+    res.status(200).json({
+      status: "success",
+      message: "Job updated successfully.",
+      data: {
+        job: updatedJob[0],
+      },
+    });
+  } catch (error) {
+    await sql`ROLLBACK`;
+    throw error;
+  }
 });
 
 export const getAllCompanyByRecruiter = tryCatch(
@@ -301,25 +394,48 @@ export const getCompanyDetails = tryCatch(
     }
 
     const company = await sql`
-        SELECT c.*, COALESCE(
-            (SELECT json_agg(j.*) FROM jobs j WHERE j.company_id = c.company_id),
-            '[]'::json
-        ) AS jobs
+        SELECT c.*
         FROM companies c
-        WHERE c.company_id = ${companyId} GROUP BY c.company_id;`; // SQL query to get company details along with its jobs
+        WHERE c.company_id = ${companyId}
+    `;
 
     if (company.length === 0) {
       throw new ErrorHandler("Company not found.", 404);
     }
 
+    // Get jobs separately with skills
+    const jobs = await sql`
+        SELECT 
+            j.job_id, j.title, j.description, j.location, j.job_type,
+            j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
+            j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
+            j.company_id,
+            ARRAY_AGG(s.name) FILTER(WHERE s.name IS NOT NULL) as skills_required
+        FROM jobs j
+        LEFT JOIN job_skills js ON j.job_id = js.job_id
+        LEFT JOIN skills s ON js.skill_id = s.skill_id
+        WHERE j.company_id = ${companyId}
+        GROUP BY j.job_id, j.title, j.description, j.location, j.job_type,
+                 j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
+                 j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
+                 j.company_id
+        ORDER BY j.created_at DESC
+    `;
+
+    // Combine company with jobs
+    const companyWithJobs = {
+      ...company[0],
+      jobs: jobs,
+    };
+
     // Cache the result for 30 minutes
-    await redisClient.setEx(cacheKey, 30 * 60, JSON.stringify(company[0]));
+    await redisClient.setEx(cacheKey, 30 * 60, JSON.stringify(companyWithJobs));
 
     res.status(200).json({
       status: "success",
       message: "Company details fetched successfully.",
       data: {
-        company: company[0],
+        company: companyWithJobs,
       },
     });
   }
@@ -524,9 +640,16 @@ export const getAllJobs = tryCatch(async (req, res) => {
             j.job_id, j.title, j.description, j.location, j.job_type,
             j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
             j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
-            c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website
+            c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website,
+            ARRAY_AGG(s.name) FILTER(WHERE s.name IS NOT NULL) as skills_required
           FROM jobs j
           JOIN companies c ON j.company_id = c.company_id
+          LEFT JOIN job_skills js ON j.job_id = js.job_id
+          LEFT JOIN skills s ON js.skill_id = s.skill_id
+          GROUP BY j.job_id, j.title, j.description, j.location, j.job_type,
+                   j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
+                   j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
+                   c.company_id, c.name, c.logo, c.website
           ORDER BY j.created_at DESC
           LIMIT ${limitNum} OFFSET ${offset}
         `,
@@ -550,10 +673,17 @@ export const getAllJobs = tryCatch(async (req, res) => {
             j.job_id, j.title, j.description, j.location, j.job_type,
             j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
             j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
-            c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website
+            c.company_id, c.name as company_name, c.logo as company_logo, c.website as company_website,
+            ARRAY_AGG(s.name) FILTER(WHERE s.name IS NOT NULL) as skills_required
           FROM jobs j
           JOIN companies c ON j.company_id = c.company_id
+          LEFT JOIN job_skills js ON j.job_id = js.job_id
+          LEFT JOIN skills s ON js.skill_id = s.skill_id
           WHERE ${whereClause}
+          GROUP BY j.job_id, j.title, j.description, j.location, j.job_type,
+                   j.salary, j.openings, j.role, j.responsibilities, j.qualifications,
+                   j.work_location, j.created_at, j.is_active, j.posted_by_recruiter_id,
+                   c.company_id, c.name, c.logo, c.website
           ORDER BY j.created_at DESC
           LIMIT ${limitNum} OFFSET ${offset}
         `,
@@ -690,9 +820,12 @@ export const getJobDetails = tryCatch(
     }
 
     const job = await sql`
-        SELECT j.*
+        SELECT j.*, ARRAY_AGG(s.name) FILTER(WHERE s.name IS NOT NULL) as skills_required
         FROM jobs j
+        LEFT JOIN job_skills js ON j.job_id = js.job_id
+        LEFT JOIN skills s ON js.skill_id = s.skill_id
         WHERE j.job_id = ${jobId}
+        GROUP BY j.job_id
     `;
 
     if (job.length === 0) {
@@ -740,6 +873,7 @@ export const getAllApplicationsForJob = tryCatch(
 
     const { jobId } = req.params;
 
+    // Check if user owns this job first
     const job = await sql`
         SELECT posted_by_recruiter_id FROM jobs WHERE job_id = ${jobId}
     `;
@@ -755,6 +889,21 @@ export const getAllApplicationsForJob = tryCatch(
       );
     }
 
+    const cacheKey = `job:applications:${jobId}`;
+
+    // Try to get from cache first
+    const cachedApplications = await redisClient.get(cacheKey);
+
+    if (cachedApplications) {
+      return res.status(200).json({
+        status: "success",
+        message: "Applications fetched successfully from cache.",
+        data: {
+          applications: JSON.parse(cachedApplications),
+        },
+      });
+    }
+
     const applications = await sql`
         SELECT a.*, u.name as applicant_name, u.email as applicant_email
         FROM applications a
@@ -762,6 +911,9 @@ export const getAllApplicationsForJob = tryCatch(
         WHERE a.job_id = ${jobId}
         ORDER BY a.subscribed DESC, a.applied_at ASC
     `;
+
+    // Cache the result for 10 minutes (applications change frequently)
+    await redisClient.setEx(cacheKey, 10 * 60, JSON.stringify(applications));
 
     res.status(200).json({
       status: "success",
@@ -828,6 +980,10 @@ export const updateApplicationStatus = tryCatch(
         WHERE application_id = ${applicationId}
         RETURNING *
     `;
+
+    // Invalidate applications cache for this job
+    await CacheService.del(`job:applications:${application[0].job_id}`);
+
     const message = {
       to: application[0].applicant_email,
       subject: `Update on your application - NextHire`,
