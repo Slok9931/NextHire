@@ -453,6 +453,7 @@ export const getAllJobs = tryCatch(async (req, res) => {
     max_openings,
     is_active,
     company_id,
+    recruiter_id,
     page = 1,
     limit = 10,
   } = req.query;
@@ -474,6 +475,7 @@ export const getAllJobs = tryCatch(async (req, res) => {
     max_openings,
     is_active,
     company_id,
+    recruiter_id,
     page: pageNum,
     limit: limitNum,
   };
@@ -622,6 +624,10 @@ export const getAllJobs = tryCatch(async (req, res) => {
     if (companyArray.length > 0) {
       conditions.push(sql`j.company_id = ANY(${companyArray})`);
     }
+  }
+
+  if (recruiter_id) {
+    conditions.push(sql`j.posted_by_recruiter_id = ${recruiter_id}`);
   }
 
   try {
