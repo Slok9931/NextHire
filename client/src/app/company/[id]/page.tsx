@@ -25,7 +25,6 @@ import {
 import { useAppData } from '@/context/AppContext'
 import { Company, Job } from '@/type'
 import Loading from '@/components/loading'
-import JobForm from '../components/JobForm'
 
 const CompanyPage = () => {
     const { id } = useParams()
@@ -33,7 +32,6 @@ const CompanyPage = () => {
     const { 
         user, 
         getCompanyDetails, 
-        createJob, 
         updateJob, 
         toggleJobStatus, 
         btnLoading 
@@ -42,7 +40,6 @@ const CompanyPage = () => {
     const [company, setCompany] = useState<Company | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState('')
-    const [showJobForm, setShowJobForm] = useState(false)
     const [editingJob, setEditingJob] = useState<Job | null>(null)
     const [togglingJobId, setTogglingJobId] = useState<number | null>(null)
 
@@ -72,23 +69,12 @@ const CompanyPage = () => {
         }
     }
 
-    const handleCreateJob = async (jobData: any) => {
-        try {
-            await createJob(jobData)
-            setShowJobForm(false)
-            fetchCompanyData() // Refresh data
-        } catch (error) {
-            console.error('Error creating job:', error)
-        }
-    }
-
     const handleUpdateJob = async (jobData: any) => {
         if (!editingJob) return
         
         try {
             await updateJob(editingJob.job_id, jobData)
             setEditingJob(null)
-            setShowJobForm(false)
             fetchCompanyData() // Refresh data
         } catch (error) {
             console.error('Error updating job:', error)
@@ -108,13 +94,11 @@ const CompanyPage = () => {
     }
 
     const handleEditJob = (job: Job) => {
-        setEditingJob(job)
-        setShowJobForm(true)
+        router.push(`/company/${id}/edit-job/${job.job_id}`)
     }
 
     const handleAddJob = () => {
-        setEditingJob(null)
-        setShowJobForm(true)
+        router.push(`/company/${id}/create-job`)
     }
 
     const handleJobCardClick = (job: Job) => {
@@ -397,17 +381,6 @@ const CompanyPage = () => {
                     </Card>
                 </div>
             </div>
-
-            {/* Job Form Dialog */}
-            <JobForm
-                open={showJobForm}
-                onOpenChange={setShowJobForm}
-                onSubmit={editingJob ? handleUpdateJob : handleCreateJob}
-                loading={btnLoading}
-                companyId={Number(id)}
-                job={editingJob}
-                isEdit={!!editingJob}
-            />
         </>
     )
 }
