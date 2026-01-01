@@ -5,7 +5,7 @@ import { Button } from './ui/button'
 import { Briefcase, Home, Info, LogOut, Menu, User, User2, X } from 'lucide-react'
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
-import { ModeToggle } from './modeToggle'
+// import { ModeToggle } from './modeToggle'
 import { useAppData } from '@/context/AppContext'
 import { redirect } from 'next/navigation'
 
@@ -80,11 +80,11 @@ const Navbar = () => {
                               </Link>
                           )}
                       </>}
-                      <ModeToggle />
+                      {/* <ModeToggle /> */}
                   </div>
 
                   <div className="md:hidden flex items-center gap-3">
-                      <ModeToggle />
+                      {/* <ModeToggle /> */}
                       <button onClick={toggleMenu} className="p-2 rounded-lg hover:bg-accent transition-colors" aria-label='Toggle Menu'>{isOpen ? <X size={24} /> : <Menu size={24} />}</button>
                   </div>
               </div>

@@ -209,7 +209,7 @@ const Jobs = () => {
     return (
         <div className="min-h-screen bg-linear-to-br from-[#ededff] via-white to-[#f0f8ff] dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             {/* Header */}
-            <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-[#d0d0ff] dark:border-[#0000c5] sticky top-0 z-40">
+            <div className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-[#d0d0ff] dark:border-[#0000c5] z-40">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                         <div>

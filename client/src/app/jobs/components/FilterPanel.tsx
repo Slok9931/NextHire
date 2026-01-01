@@ -109,7 +109,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({ onFiltersChange, isLoading })
     const activeFiltersCount = getActiveFiltersCount()
 
     return (
-        <Card className="h-fit sticky top-4 shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md">
+        <Card className="max-h-[85vh] sticky top-24 shadow-lg border-[#b0b0ff] dark:border-[#0000c5] bg-white/90 dark:bg-gray-900/90 backdrop-blur-md overflow-y-auto">
             <CardHeader>
                 <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
